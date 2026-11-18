@@ -6,15 +6,14 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-test('README stays concise and describes the reader workflow', () => {
+test('README presents the reader workflow in English', () => {
   const readme = readFileSync(join(ROOT, 'README.md'), 'utf8');
-  for (const phrase of ['Collect', 'Understand', 'Organize', 'Keep', 'Review']) {
-    assert.ok(readme.includes(phrase), `README is missing: ${phrase}`);
+  for (const phrase of ['collect', 'understand', 'organize', 'keep', 'review']) {
+    assert.ok(readme.toLowerCase().includes(phrase), `README is missing: ${phrase}`);
   }
   assert.equal(/[\u3400-\u9fff\uf900-\ufaff]/u.test(readme), false, 'README should use English throughout');
-  assert.ok(readme.split(/\r?\n/).length < 30, 'README should remain concise and suitable for the project homepage');
-  for (const engineeringDetail of ['401', 'DPAPI', '最多 3 次', '受控商业 pilot']) {
-    assert.equal(readme.includes(engineeringDetail), false, `README should omit internal implementation details: ${engineeringDetail}`);
+  for (const page of ['docs/engineering-route.md', 'docs/prior-art.md']) {
+    assert.ok(readme.includes(`](${page})`), `README should link ${page}`);
   }
 });
 

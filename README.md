@@ -1,4 +1,4 @@
-<p align="center"><img src=".github/readme/cover.png" alt="Info Collector, a technical reading terminal: saved pages flow through a queue and a filter into a finished article" width="100%"></p>
+<p align="center"><img src=".github/readme/cover.webp" alt="Info Collector: saved links become a library you actually read" width="100%"></p>
 
 # Info Collector
 

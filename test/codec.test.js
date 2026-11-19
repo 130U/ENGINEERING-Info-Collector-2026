@@ -12,7 +12,7 @@ const sample = {
   ],
   jobs: {
     translate: { status: 'pending', processedAt: null, updatedAt: '2026-07-05T00:00:00Z', attempts: 0, lastError: null, meta: {} },
-    book: { status: 'failed', processedAt: null, updatedAt: '2026-07-05T02:00:00Z', attempts: 2, lastError: 'pi exit 1', meta: { a: 1 } },
+    book: { status: 'failed', processedAt: null, updatedAt: '2026-07-05T02:00:00Z', attempts: 2, lastError: 'exit 1', meta: { a: 1 } },
   },
   createdAt: '2026-07-05T00:00:00Z',
   updatedAt: '2026-07-05T02:00:00Z',

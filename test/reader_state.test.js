@@ -145,7 +145,7 @@ test('每周阅读统计不可筛选文章，并可导出带状态的七天回�
   assert.match(markdown, /\[查看原文\]\(https:\/\/example\.test\/world-model\)/);
 });
 
-test('复制资料卡字段顺序准确，旧文缺失值使用未知和整理时间', () => {
+test('复制资料卡字段顺序准确，缺失值使用未知和整理时间', () => {
   const api = loadApi();
   const markdown = api.buildInfoCardMarkdown({
     title: 'A &amp; B',

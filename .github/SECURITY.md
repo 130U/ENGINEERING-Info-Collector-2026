@@ -2,7 +2,7 @@
 
 ## Supported surface
 
-Security fixes target the current `main` branch on Windows 11, Chrome Manifest V3 and Python 3.9+. Report vulnerabilities through GitHub Security Advisories; do not include API keys, cookies, private article text or signed URLs in an issue.
+Security fixes target the current `main` branch on Windows 11, Chrome Manifest V3 and Python 3.9+. Report vulnerabilities privately by email to theodore.oy2025@gmail.com, not in a public issue; do not include API keys, cookies, private article text or signed URLs in a report.
 
 ## Trust boundaries
 
@@ -15,7 +15,7 @@ Security fixes target the current `main` branch on Windows 11, Chrome Manifest V
 
 ## Secrets
 
-New Windows installs store model API keys with current-user DPAPI. `config.json` keeps only a credential reference. `INFO_COLLECTOR_API_KEY` is supported for short-lived CI use. Legacy plaintext `apiKey` remains readable for migration but should be removed by rerunning `scripts/setup.ps1`.
+Model API keys are stored with current-user DPAPI. `config.json` keeps only a credential reference. `INFO_COLLECTOR_API_KEY` is supported for short-lived CI use.
 
 ## Deployment responsibilities
 

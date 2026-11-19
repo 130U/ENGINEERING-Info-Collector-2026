@@ -1,4 +1,4 @@
-// 桥接会话（ADR 0002）：经 Native Messaging host 写 outbox、收 inbox 报告并 ack。
+// 桥接会话：经 Native Messaging host 写 outbox、收 inbox 报告并 ack。
 // host 是哑文件搬运工，全部状态语义在这里应用。
 
 import { normalizeUrl } from './normalize.js';
@@ -108,7 +108,7 @@ export async function bridgeSync() {
   return { reports: (resp.reports || []).length, applied: changed.size, reclaimed, hostErrors: resp.errors || [] };
 }
 
-// 立即触发一条外部流程（ADR 0004）：host 只执行 flows.json 注册的命令，
+// 立即触发一条外部流程：host 只执行 flows.json 注册的命令，
 // 这里只能点名 processingType。
 export async function triggerFlow(type) {
   const port = chrome.runtime.connectNative(HOST_NAME);

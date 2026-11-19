@@ -5,8 +5,8 @@ decision stands on, how product, front end and back end divide the work, what th
 went back and changed the design.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="../.github/readme/route-dark.png">
-  <img src="../.github/readme/route-light.png" alt="Engineering route as a network: three needs, five studies of prior art, five requirements, four product decisions and two rejected alternatives, three front-end components, five back-end components, three test suites and six results, joined by 37 typed links, one of which runs backwards from a test to the design." width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/route-dark.png">
+  <img src="../assets/route-light.png" alt="Engineering route as a network: three needs, five studies of prior art, five requirements, four product decisions and two rejected alternatives, three front-end components, five back-end components, three test suites and six results, joined by 37 typed links, one of which runs backwards from a test to the design." width="100%">
 </picture>
 
 ## Reading the figure
@@ -76,7 +76,7 @@ malformed model output and a long article through the real flow (T2 → O4, O5).
 
 ### 4. A library that outlives every service
 
-N3, P3, P4, P5 → I5 → D3, D4 → F3 → B5 → T3 → O6, with I5 ruling out X2 and T3 feeding back into B5.
+N3, P3, P4, P5 → I5 → D3; D3, D4 → F3 → B5 → T3 → O6, with I5 ruling out X2 and T3 feeding back into B5.
 
 Omnivore closed its hosted service in November 2024 and Pocket closed in July 2025 (P4); their users had to export
 or lose their libraries. Self-hosted tools such as wallabag and Karakeep keep the data with the user but need a
@@ -117,13 +117,13 @@ both plain static files that open without a server (O6).
 | **D4** A weekly recap with no extra model call | Product | The week's reading is summarized from the summaries and tags already produced, grouped by topic with a daily reading calendar, at no further model cost. |
 | **F1** Popup saves the visible article text, no cookies | Front End | On an explicit click the popup extracts the visible article body, leaving out navigation, forms and account controls. It never copies cookies, authorization headers or passwords. |
 | **F2** Dashboard: queue state, retries, run now | Front End | An extension page shows every article's state per processing type, with mark done, ignore, requeue and run-now controls, the time of each flow's last and next run, and sync quota. |
-| **F3** Reading desk: featured, topics, progress; opens from file:// | Front End | A static reading front end with featured pieces, a recovery queue, topic filters, favorites and reading progress. It needs no server and opens straight from disk. |
+| **F3** Reading desk: inbox, topics, progress; opens from file:// | Front End | A static reading front end with a reading inbox, a recovery queue, topic filters, favorites and reading progress. It needs no server and opens straight from disk. |
 | **B1** Native host: file spool, atomic writes, acknowledged reports | Back End | A Python native-messaging host writes each processing type's pending list to an outbox and returns completion reports from an inbox. Writes go through a temporary file and a rename; a report is archived only after the extension acknowledges it. |
 | **B2** Flow registry: SHA-256-pinned scripts, argument arrays | Back End | The extension may only name a processing type. The host looks up the command in a local registry, checks the script's SHA-256 and trusted directory, and starts it with an argument array, never through a shell. |
 | **B3** 19 typed failures, each with an operator action | Back End | Every failure carries a code, a stage, a retryable flag and an operator action: authorization required, login boilerplate, private network, DNS, provider refusal, cost limit and more. No failure produces a placeholder translation. |
 | **B4** Segment checkpoints; 3 attempts; per-article cost cap | Back End | Long articles are translated in 48,000-character segments saved as checkpoints. Retryable failures get three attempts with backoff, and each article has a hard input budget. |
 | **B5** Site generator: escapes HTML, quarantines failed pages | Back End | A deterministic generator turns the Markdown library into an index and article pages. Raw HTML is escaped, links must be http or https, and an article without a publishable translation is held in a recovery queue. |
-| **T1** 91 tests on Windows and Ubuntu runners | Test | 49 Node tests and 42 Python tests cover queue transitions, codecs, import deduplication, the native-messaging binary protocol, the host's trigger rules, the worker, the reader and the site generator. |
+| **T1** 85 tests on Windows and Ubuntu runners | Test | 47 Node tests and 38 Python tests cover queue transitions, codecs, import deduplication, the native-messaging binary protocol, the host's trigger rules, the worker, the reader and the site generator. |
 | **T2** Failure paths: blocked source, login page, long article | Test | The worker's tests send a blocked source, login boilerplate, malformed model output and a long article through the real flow, and check the failure code, the absence of a model call and the segment boundaries. |
 | **T3** Public snapshot rebuilt and verified | Test | The public reading desk is regenerated from the library and checked for every page, link and asset, with no key, local path or excluded article in it. |
 | **O1** A crashed worker's claim lapses back to pending | Result | A flow claims its articles before it starts. If it stops without reporting, the claim lapses on the next sync and the articles return to pending without counting as failures. |

@@ -3,18 +3,21 @@ import contextlib
 import io
 import json
 import os
+import socket
 import stat
 import subprocess
 import sys
 import tempfile
 import threading
 import unittest
+from unittest import mock
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FLOW_PATH = ROOT / "flows" / "translate-claude-api.py"
+FLOW_PATH = ROOT / "flows" / "translate.py"
+PAGE_HTML = "<html><body><article><h1>Backend DeepSeek Test</h1><p>served-page-marker</p></article></body></html>"
 
 
 def import_flow(home):
@@ -39,7 +42,15 @@ class MockDeepSeekHandler(BaseHTTPRequestHandler):
     api_requests = []
 
     def do_GET(self):
-        self.send_error(500, "DeepSeek backend test should use defuddle, not builtin fetch")
+        if self.path != "/article":
+            self.send_error(404)
+            return
+        body = PAGE_HTML.encode("utf-8")
+        self.send_response(200)
+        self.send_header("content-type", "text/html; charset=utf-8")
+        self.send_header("content-length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def do_POST(self):
         if self.path != "/chat/completions":
@@ -133,6 +144,83 @@ class TranslateFlowBackendTest(unittest.TestCase):
                     os.environ["INFO_COLLECTOR_ALLOW_CUSTOM_API_BASE"] = self.old_custom_api_base
                 os.environ["INFO_COLLECTOR_ALLOW_INSECURE_API_BASE_FOR_TESTS"] = "1"
 
+    def test_config_never_reads_a_plaintext_key(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            old_api_key = os.environ.pop("INFO_COLLECTOR_API_KEY", None)
+            old_home = os.environ.get("INFO_COLLECTOR_HOME")
+            os.environ["INFO_COLLECTOR_HOME"] = str(home)
+            try:
+                flow = import_flow(home)
+                Path(flow.CONFIG_FILE).parent.mkdir(parents=True)
+                Path(flow.CONFIG_FILE).write_text(json.dumps({
+                    "provider": "deepseek",
+                    "credentialRef": "info-collector:test-only",
+                    "apiKey": "sk-plaintext000000000000000",
+                }), encoding="utf-8")
+                cfg = flow.load_config()
+            finally:
+                if old_api_key is not None:
+                    os.environ["INFO_COLLECTOR_API_KEY"] = old_api_key
+                if old_home is None:
+                    os.environ.pop("INFO_COLLECTOR_HOME", None)
+                else:
+                    os.environ["INFO_COLLECTOR_HOME"] = old_home
+            self.assertEqual(cfg["apiKey"], "")
+            self.assertIn("API Key", flow.config_error(cfg))
+
+    def test_anthropic_translation_is_one_request_over_untrusted_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            flow = import_flow(Path(tmp))
+            calls = []
+
+            def fake_request(path, payload, _cfg):
+                calls.append((path, payload))
+                return {"stop_reason": "end_turn", "content": [{"type": "text", "text": "---\ntitle: 译文\n---\n\n正文"}]}
+
+            flow.anthropic_request = fake_request
+            article = {"content": "Visible article text.", "title": "T", "published": "", "authors": "", "extractor": "builtin"}
+            markdown = flow.translate_article_anthropic("https://example.test/a", "T", {"model": "m"}, article)
+            self.assertTrue(markdown.startswith("---"))
+            self.assertEqual(len(calls), 1)
+            path, payload = calls[0]
+            self.assertEqual(path, "/v1/messages")
+            self.assertIn("不可信数据", payload["system"])
+            self.assertNotIn("tools", payload)
+            self.assertIn("Visible article text.", payload["messages"][0]["content"])
+
+    def test_fetch_connects_only_to_the_checked_public_address(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            flow = import_flow(Path(tmp))
+            answer = ["93.184.216.34"]
+            lookups, connects = [], []
+
+            def fake_getaddrinfo(host, port, *args, **kwargs):
+                lookups.append(host)
+                return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (answer[0], port))]
+
+            def fake_create_connection(address, *args, **kwargs):
+                connects.append(address)
+                raise OSError("stop before the network")
+
+            with mock.patch.object(flow.socket, "getaddrinfo", fake_getaddrinfo), \
+                    mock.patch.object(flow.socket, "create_connection", fake_create_connection):
+                with self.assertRaises(flow.PipelineError) as network:
+                    flow.fetch_public_page("https://news.example/a")
+                self.assertEqual(network.exception.code, "source_network")
+                self.assertEqual(lookups, ["news.example"])
+                self.assertEqual(connects, [("93.184.216.34", 443)])
+
+                answer[0] = "10.0.0.5"
+                with self.assertRaises(flow.PipelineError) as private:
+                    flow.fetch_public_page("https://news.example/a")
+                self.assertEqual(private.exception.code, "source_private_network_rejected")
+                self.assertEqual(len(connects), 1)
+
+                with self.assertRaises(flow.PipelineError) as local:
+                    flow.fetch_public_page("http://localhost/a")
+                self.assertEqual(local.exception.code, "source_private_network_rejected")
+
     def install_fake_defuddle(self, home):
         bin_dir = home / "bin"
         bin_dir.mkdir()
@@ -143,7 +231,10 @@ import json
 import pathlib
 import sys
 
-pathlib.Path({str(marker)!r}).write_text(json.dumps(sys.argv), encoding="utf-8")
+pathlib.Path({str(marker)!r}).write_text(json.dumps({{
+    "argv": sys.argv,
+    "page": pathlib.Path(sys.argv[2]).read_text(encoding="utf-8"),
+}}), encoding="utf-8")
 print(json.dumps({{
     "title": "Backend DeepSeek Test",
     "published": "2026-07-04",
@@ -178,7 +269,7 @@ print(json.dumps({{
             }
 
             proc = subprocess.run(
-                [sys.executable, str(FLOW_PATH), "--manual"],
+                [sys.executable, str(FLOW_PATH)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=env,
@@ -194,7 +285,7 @@ print(json.dumps({{
             log_path = home / ".info-collector" / "state" / "translate-flow.log"
             self.assertTrue(log_path.exists())
             log_text = log_path.read_text(encoding="utf-8")
-            self.assertIn("开始巡检翻译队列（manual）", log_text)
+            self.assertIn("开始巡检翻译队列", log_text)
             self.assertIn("❌", log_text)
 
     def test_enrichment_parser_normalizes_aliases_and_inserts_summary_section(self):
@@ -280,7 +371,7 @@ print(json.dumps({{
                 "authors": "Ada",
                 "content": "Verified visible article paragraph with enough meaningful words for quality validation. " * 12,
             }), encoding="utf-8")
-            flow.fetch_article_with_builtin = lambda _url: self.fail("capture should win")
+            flow.fetch_public_page = lambda _url: self.fail("capture should win")
             article = flow.fetch_article_source(article_key, capture_file=str(capture_path))
             self.assertEqual(article["extractor"], "browser-rendered")
             self.assertEqual(article["authors"], "Ada")
@@ -473,12 +564,13 @@ print(json.dumps({{
     def test_deepseek_flow_runs_from_backend_spool_to_inbox(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
-            bin_dir, defuddle_marker, defuddle_executable = self.install_fake_defuddle(home)
-            old_path = os.environ.get("PATH", "")
+            _bin_dir, defuddle_marker, defuddle_executable = self.install_fake_defuddle(home)
+            article_url = f"{self.base_url}/article"
             old_disable_defuddle = os.environ.pop("INFO_COLLECTOR_DISABLE_DEFUDDLE", None)
             old_skip_fetch_safety = os.environ.get("INFO_COLLECTOR_SKIP_FETCH_SAFETY_FOR_TESTS")
-            os.environ["PATH"] = f"{bin_dir}{os.pathsep}{old_path}"
+            old_api_key = os.environ.get("INFO_COLLECTOR_API_KEY")
             os.environ["INFO_COLLECTOR_SKIP_FETCH_SAFETY_FOR_TESTS"] = "1"
+            os.environ["INFO_COLLECTOR_API_KEY"] = "sk-test000000000000000000000"
             flow = import_flow(home)
             spool = home / ".info-collector"
             (spool / "outbox").mkdir(parents=True)
@@ -486,7 +578,6 @@ print(json.dumps({{
             out_dir = home / "translated"
             (spool / "config.json").write_text(json.dumps({
                 "provider": "deepseek",
-                "apiKey": "sk-test000000000000000000000",
                 "baseUrl": self.base_url,
                 "model": "deepseek-v4-flash",
                 "extractorPath": str(defuddle_executable),
@@ -496,7 +587,7 @@ print(json.dumps({{
                 "processingType": "translate",
                 "articles": [{
                     "articleKey": "article-1",
-                    "url": "https://example.test/article",
+                    "url": article_url,
                     "title": "Backend DeepSeek Test",
                     "enqueuedAt": "2026-07-11T12:34:56.000Z",
                 }],
@@ -506,23 +597,30 @@ print(json.dumps({{
                 with contextlib.redirect_stdout(io.StringIO()):
                     flow.main()
             finally:
-                os.environ["PATH"] = old_path
                 if old_disable_defuddle is not None:
                     os.environ["INFO_COLLECTOR_DISABLE_DEFUDDLE"] = old_disable_defuddle
                 if old_skip_fetch_safety is None:
                     os.environ.pop("INFO_COLLECTOR_SKIP_FETCH_SAFETY_FOR_TESTS", None)
                 else:
                     os.environ["INFO_COLLECTOR_SKIP_FETCH_SAFETY_FOR_TESTS"] = old_skip_fetch_safety
+                if old_api_key is None:
+                    os.environ.pop("INFO_COLLECTOR_API_KEY", None)
+                else:
+                    os.environ["INFO_COLLECTOR_API_KEY"] = old_api_key
 
             self.assertEqual(len(MockDeepSeekHandler.api_requests), 1)
             self.assertTrue(defuddle_marker.exists())
-            defuddle_argv = json.loads(defuddle_marker.read_text(encoding="utf-8"))
-            self.assertEqual(defuddle_argv[1:], ["parse", "https://example.test/article", "--json"])
+            defuddle_call = json.loads(defuddle_marker.read_text(encoding="utf-8"))
+            self.assertEqual(defuddle_call["argv"][1], "parse")
+            self.assertTrue(defuddle_call["argv"][2].endswith("page.html"))
+            self.assertEqual(defuddle_call["argv"][3], "--json")
+            self.assertEqual(defuddle_call["page"], PAGE_HTML)
             req = MockDeepSeekHandler.api_requests[0]
             self.assertEqual(req["authorization"], "Bearer sk-test000000000000000000000")
             self.assertEqual(req["payload"]["model"], "deepseek-v4-flash")
             self.assertEqual(req["payload"]["max_tokens"], flow.MAX_DEEPSEEK_OUTPUT_TOKENS)
             self.assertEqual(req["payload"]["thinking"], {"type": "disabled"})
+            self.assertIn("不可信数据", req["payload"]["messages"][0]["content"])
             self.assertIn("原文提取文本", req["payload"]["messages"][1]["content"])
             self.assertIn("正文提取器: defuddle", req["payload"]["messages"][1]["content"])
             self.assertIn("Ada Lovelace", req["payload"]["messages"][1]["content"])
@@ -534,7 +632,7 @@ print(json.dumps({{
             self.assertIn("## 摘要", saved_text)
             self.assertIn("# 后端 DeepSeek 测试", saved_text)
             self.assertIn('article_key: "article-1"', saved_text)
-            self.assertIn('source: "https://example.test/article"', saved_text)
+            self.assertIn(f'source: "{article_url}"', saved_text)
             self.assertIn('published_at: "2026-07-04"', saved_text)
             self.assertIn('collected_at: "2026-07-11T12:34:56.000Z"', saved_text)
             self.assertRegex(saved_text, r'(?m)^processed_at: "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z"$')

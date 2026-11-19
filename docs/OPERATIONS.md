@@ -1,4 +1,4 @@
-# Operations and controlled-commercial pilot
+# Operations and controlled commercial pilot
 
 ## Release gate
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Info Collector 的 Native Messaging host：文件搬运工 + 流程触发器（ADR 0002、0004）。
+Info Collector 的 Native Messaging host：文件搬运工 + 流程触发器。
 - sync：把各处理类型的待处理清单原子写入 ~/.info-collector/outbox/<type>.json，
   把已 ack 的报告移入 inbox/processed/，返回 inbox 里剩余的 Completion Report
   以及各流程的运行状态（来自 flows.json 与 state/<type>-status.json）。
@@ -40,8 +40,8 @@ MAX_NATIVE_MESSAGE_BYTES = 2_000_000
 MAX_SYNC_TYPES = 32
 MAX_OUTBOX_ARTICLES = 2000
 OPENABLE_OUTPUTS = {
-    "weekly-report": ("weekly-report-status.json", "latestReport"),
-    "reading-site": ("reading-site-status.json", "siteIndex"),
+    "weekly-report": ("weekly-report-status.json", "latestReport", ".md"),
+    "reading-site": ("reading-site-status.json", "siteIndex", ".html"),
 }
 
 
@@ -154,7 +154,6 @@ def flow_statuses():
                 status = {}
         out[ptype] = {
             "running": lock_is_held(os.path.expanduser(cfg.get("lockFile") or "")),
-            "intervalSeconds": cfg.get("intervalSeconds"),
             "triggerable": isinstance(cfg.get("command"), list) and bool(cfg.get("command")),
             "status": status,
         }
@@ -181,7 +180,8 @@ def handle_sync(msg):
         for article in articles if isinstance(articles, list) else []:
             if not isinstance(article, dict):
                 continue
-            enriched = dict(article)
+            # Only the host attaches a capture path; never trust one from the caller.
+            enriched = {key: value for key, value in article.items() if key != "captureFile"}
             article_key = str(article.get("articleKey") or "")
             if article_key:
                 capture_path = os.path.join(
@@ -330,7 +330,7 @@ def handle_open_output(msg):
     contract = OPENABLE_OUTPUTS.get(ptype)
     if not contract:
         return {"ok": False, "error": f"不允许打开该流程输出: {ptype}"}
-    status_name, field = contract
+    status_name, field, suffix = contract
     status_path = Path(STATE) / status_name
     try:
         status = json.loads(status_path.read_text(encoding="utf-8"))
@@ -345,6 +345,8 @@ def handle_open_output(msg):
         target.relative_to(home)
     except ValueError:
         return {"ok": False, "error": "输出路径不在用户目录内，已拒绝打开"}
+    if target.suffix.lower() != suffix:
+        return {"ok": False, "error": f"只允许打开 {suffix} 生成文件"}
     if not target.is_file():
         return {"ok": False, "error": "生成文件不存在，请重新生成"}
     open_local_path(target)

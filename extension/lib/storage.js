@@ -1,4 +1,4 @@
-// chrome.storage 读写层：sync 分桶 + local 归档（ADR 0003）。
+// chrome.storage 读写层：sync 分桶 + local 归档。
 // 对外只暴露完整形态的 Queue Record，压缩编码在此层内完成。
 
 import { BUCKET_KEYS, bucketKeyOf, encodeRecord, decodeRecord } from './codec.js';
@@ -16,13 +16,9 @@ const QUOTA_SOFT_LIMIT = 0.8;
 export function defaultMeta(now) {
   return {
     version: 1,
-    settings: {
-      folders: ['收藏文章'],
-      typeFolders: { podcast: ['收藏播客'] },
-    },
+    settings: { folders: ['收藏文章'] },
     types: {
       translate: { label: '翻译', autoEnroll: true, createdAt: now },
-      podcast: { label: '播客', autoEnroll: false, createdAt: now },
     },
   };
 }
@@ -31,20 +27,9 @@ export async function loadMeta() {
   const got = await chrome.storage.sync.get(META_KEY);
   if (got[META_KEY]) {
     const meta = got[META_KEY];
-    let changed = false;
     meta.settings ||= {};
     meta.settings.folders ||= ['收藏文章'];
-    meta.settings.typeFolders ||= {};
-    if (!meta.settings.typeFolders.podcast) {
-      meta.settings.typeFolders.podcast = ['收藏播客'];
-      changed = true;
-    }
     meta.types ||= {};
-    if (!meta.types.podcast) {
-      meta.types.podcast = { label: '播客', autoEnroll: false, createdAt: new Date().toISOString() };
-      changed = true;
-    }
-    if (changed) await saveMeta(meta);
     return meta;
   }
   const meta = defaultMeta(new Date().toISOString());

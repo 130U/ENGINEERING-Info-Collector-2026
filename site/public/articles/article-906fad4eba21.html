@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="本文探讨了机器人基础模型领域的新范式——世界-行动模型（WAM）。与基于视觉-语言模型（VLM）的VLA模型不同，WAM利用预训练的视频或世界模型骨干网络，将语言指令映射为视觉变化，再生成动作。文章分析了WAM的三种核心范式（逆动力学、联合预测、仅表示）、动作集成方式及架构，并通过Veo 3.1实验和DreamZero等案例展示了其潜力。作者认为，WAM将成为与VLA并行的第二条主要技术路线，未来更可能走向混合模型。">
   <meta name="color-scheme" content="light">
@@ -9,12 +10,12 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="预训练以想象，微调以行动：世界-行动模型的崛起（Pretrained to Imagine, Fine-Tuned to Act: The Rise of World-Action Models） · Info Collector">
   <meta property="og:description" content="本文探讨了机器人基础模型领域的新范式——世界-行动模型（WAM）。与基于视觉-语言模型（VLM）的VLA模型不同，WAM利用预训练的视频或世界模型骨干网络，将语言指令映射为视觉变化，再生成动作。文章分析了WAM的三种核心范式（逆动力学、联合预测、仅表示）、动作集成方式及架构，并通过Veo 3.1实验和DreamZero等案例展示了其潜力。作者认为，WAM将成为与VLA并行的第二条主要技术路线，未来更可能走向混合模型。">
-  <meta property="og:image" content="https://info-collector-reading-desk.jiligualapiqiu.chatgpt.site/og.png">
+  <meta property="og:image" content="https://www.theodoreoy.com/ENGINEERING-Info-Collector-2026/og.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://info-collector-reading-desk.jiligualapiqiu.chatgpt.site/og.png">
+  <meta name="twitter:image" content="https://www.theodoreoy.com/ENGINEERING-Info-Collector-2026/og.png">
   <title>预训练以想象，微调以行动：世界-行动模型的崛起（Pretrained to Imagine, Fine-Tuned to Act: The Rise of World-Action Models） · Info Collector</title>
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-  <link rel="stylesheet" href="../assets/style.css?v=234ec6570994">
+  <link rel="stylesheet" href="../assets/style.css?v=163ab3f8e618">
 </head>
 <body class="article-page">
   <div class="reading-progress" aria-hidden="true"><span></span></div>
@@ -347,6 +348,6 @@ note = {Blog post},
     </article>
   </main>
   <footer class="site-footer" aria-label="Built by @130U × @aswrise"><span>Built by</span> <a href="https://github.com/130U" target="_blank" rel="noopener noreferrer">@130U</a> <i aria-hidden="true">×</i> <a href="https://github.com/aswrise" target="_blank" rel="noopener noreferrer">@aswrise</a></footer>
-  <script src="../assets/app.js?v=234ec6570994" defer></script>
+  <script src="../assets/app.js?v=163ab3f8e618" defer></script>
 </body>
 </html>

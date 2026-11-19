@@ -45,6 +45,6 @@ Chrome 书签提供导入来源；处理状态属于扩展。文章身份来自�
 
 扩展经 Native Messaging host 交换 `outbox/<type>.json` 与 `inbox/` Completion Report。报告应用幂等，确认后归档；处理状态语义留在扩展中。Dashboard 的手动标记和批量导入可独立使用。
 
-Dashboard 按 `processingType` 触发 `~/.info-collector/flows.json` 中注册的命令。扩展不能传命令或参数；host 校验受信目录与脚本哈希，通过参数数组启动进程，并用 lockFile 检测运行状态。结果沿 Completion Report 返回。手动触发的 `--manual` 标记保持定时锚点 `lastScheduledStartAt` 不变。
+Dashboard 按 `processingType` 触发 `~/.info-collector/flows.json` 中注册的命令。扩展不能传命令或参数；host 校验受信目录与脚本哈希，通过参数数组启动进程，并用 lockFile 检测运行状态。结果沿 Completion Report 返回。
 
 触发粒度是处理类型：一次流程消费该类型 outbox 中全部未报告文章。运行状态来自 lockFile 与 `state/<type>-status.json`；它是流程状态快照，不替代逐文章完成报告。

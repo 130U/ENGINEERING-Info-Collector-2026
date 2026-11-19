@@ -12,7 +12,7 @@ from xml.sax.saxutils import escape as xml_escape
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR_PATH = ROOT / "flows" / "generate-reading-site.py"
 PUBLIC = ROOT / "site" / "public"
-PUBLIC_SITE_URL = "https://info.theodoreoy.com"
+PUBLIC_SITE_URL = "https://www.theodoreoy.com/ENGINEERING-Info-Collector-2026"
 
 
 def load_generator():
@@ -69,7 +69,6 @@ def article_from_attrs(attrs, generator):
         "published_at": attrs.get("data-published-value", ""),
         "collected_at": attrs.get("data-collected-value", ""),
         "processed_at": attrs.get("data-processed-value", ""),
-        "legacy_date": "",
         "authors": attrs.get("data-authors", ""),
         "content_status": status,
         "summary": summary,
@@ -119,13 +118,13 @@ def main():
         shutil.copy2(assets / name, PUBLIC / "assets" / name)
     shutil.copy2(assets.parent / "favicon.svg", PUBLIC / "favicon.svg")
     version = generator.frontend_asset_version(assets)
-    generator.atomic_write_text(PUBLIC / "index.html", generator.render_index(articles, version))
+    generator.atomic_write_text(PUBLIC / "index.html", generator.render_index(articles, version, PUBLIC_SITE_URL))
     expected_pages = set()
     for article in articles:
         expected_pages.add(f"{article['slug']}.html")
         generator.atomic_write_text(
             PUBLIC / "articles" / f"{article['slug']}.html",
-            generator.render_article_page(article, version),
+            generator.render_article_page(article, version, PUBLIC_SITE_URL),
         )
     for stale in (PUBLIC / "articles").glob("article-*.html"):
         if stale.name not in expected_pages:

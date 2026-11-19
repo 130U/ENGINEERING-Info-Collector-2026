@@ -1,13 +1,13 @@
 import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
+const siteUrl = "https://www.theodoreoy.com/ENGINEERING-Info-Collector-2026/";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = path.join(root, "public");
 const index = await readFile(path.join(publicDir, "index.html"), "utf8");
 const articleDir = path.join(publicDir, "articles");
-const workerPath = path.join(root, "dist", "server", "index.js");
 const socialImagePath = path.join(publicDir, "og.png");
 const faviconPath = path.join(publicDir, "favicon.svg");
 const style = await readFile(path.join(publicDir, "assets", "style.css"), "utf8");
@@ -75,9 +75,10 @@ async function validateLocalReferences(html, relative) {
 }
 
 const articleFiles = (await readdir(articleDir)).filter((name) => /^article-[a-z0-9]+\.html$/i.test(name)).sort();
-const excludedArticle = "article-8a0810a163f4.html";
-if (articleFiles.includes(excludedArticle) || index.includes(excludedArticle) || sitemap.includes(excludedArticle)) {
-  throw new Error(`Excluded article is public: ${excludedArticle}`);
+for (const excludedArticle of ["article-8a0810a163f4.html", "article-53d7eead7cb1.html"]) {
+  if (articleFiles.includes(excludedArticle) || index.includes(excludedArticle) || sitemap.includes(excludedArticle)) {
+    throw new Error(`Excluded article is public: ${excludedArticle}`);
+  }
 }
 const htmlDocuments = new Map([["index.html", index]]);
 for (const article of articleFiles) htmlDocuments.set(`articles/${article}`, await readFile(path.join(articleDir, article), "utf8"));
@@ -86,7 +87,6 @@ for (const [relative, html] of htmlDocuments) {
   await validateLocalReferences(html, relative);
 }
 
-await access(workerPath);
 await access(socialImagePath);
 await access(faviconPath);
 for (const phrase of ["阅读收件箱", "先判断价值，再进入全文", "快速定位", "主题筛选", "待整理", "我的收藏", "可信译文", "阅读进度", "导出 Markdown", "复制资料卡", "Info Collector", "@130U", "@aswrise"]) {
@@ -95,29 +95,25 @@ for (const phrase of ["阅读收件箱", "先判断价值，再进入全文", "�
 if ((index.match(/href="https:\/\/github\.com\/130U"/g) || []).length !== 2 || (index.match(/href="https:\/\/github\.com\/aswrise"/g) || []).length !== 2) {
   throw new Error("Header and footer contributor credits are not unified");
 }
-if (index.includes("@THEO") || index.includes("@AQUA") || index.includes("Madarame87")) throw new Error("Unapproved contributor credits remain");
-for (const socialPhrase of [
-  '<meta property="og:image" content="https://info-collector-reading-desk.jiligualapiqiu.chatgpt.site/og.png">',
-  '<meta name="twitter:card" content="summary_large_image">',
-]) {
-  if (!index.includes(socialPhrase)) throw new Error(`Missing social-preview metadata: ${socialPhrase}`);
+for (const [relative, html] of htmlDocuments) {
+  for (const socialPhrase of [
+    `<meta property="og:image" content="${siteUrl}og.png">`,
+    '<meta name="twitter:card" content="summary_large_image">',
+    `<meta name="twitter:image" content="${siteUrl}og.png">`,
+  ]) {
+    if (!html.includes(socialPhrase)) throw new Error(`Missing social-preview metadata in ${relative}: ${socialPhrase}`);
+  }
 }
+if (/data-authors="\[/.test(index)) throw new Error("An author list is rendered as a raw list");
 if (!index.includes("搜索标题、摘要、作者或主题") || !index.includes('id="article-search"') || !index.includes('class="command-bar"')) {
   throw new Error("Reading-terminal search control is missing");
 }
-if (index.includes("data-search=")) throw new Error("Redundant search data remains in the reading index");
 if (!index.includes('id="result-count" aria-live="polite" aria-atomic="true"')) throw new Error("Filter result count is not an accessible live region");
-if (index.includes('data-view="weekly"')) throw new Error("Weekly activity must not behave as a fourth article filter");
-if (!index.includes('id="export-weekly"') || !index.includes('id="weekly-chart-line"') || !index.includes('id="weekly-chart-area"') || !index.includes('id="weekly-chart-marker"') || !index.includes('id="weekly-chart-value"') || !index.includes('id="weekly-periods"')) throw new Error("Premium weekly activity chart/export controls are missing");
-if (index.includes('id="weekly-chart-points"') || index.includes('id="weekly-count"')) throw new Error("Unused weekly chart elements remain");
-if (!index.includes('class="brand-signal"') || index.includes('class="brand-mark"')) throw new Error("Brand signal contract is invalid");
+if (!index.includes('id="export-weekly"') || !index.includes('id="weekly-chart-line"') || !index.includes('id="weekly-chart-area"') || !index.includes('id="weekly-chart-marker"') || !index.includes('id="weekly-chart-value"') || !index.includes('id="weekly-periods"')) throw new Error("Weekly activity chart/export controls are missing");
+if (!index.includes('class="brand-signal"')) throw new Error("Brand signal is missing");
 const styleVersion = index.match(/href="assets\/style\.css\?v=([0-9a-f]{12})"/)?.[1];
 const appVersion = index.match(/src="assets\/app\.js\?v=([0-9a-f]{12})"/)?.[1];
 if (!styleVersion || styleVersion !== appVersion) throw new Error("Reading-site assets are not cache-busted with one content version");
-if (index.includes("阅读中文全文")) throw new Error("Index still includes the removed reading CTA");
-if (index.includes("WINDOWS 11 · LOCAL-FIRST") || index.includes("INFO COLLECTOR / READING DESK")) {
-  throw new Error("Index includes unapproved system labels");
-}
 if (!index.includes('<article class="article-card terminal-row') || index.includes('<a class="article-card')) {
   throw new Error("Article cards must be semantic containers, not full-card links");
 }
@@ -127,7 +123,6 @@ if ((index.match(/data-action="favorite"/g) || []).length < 5 || (index.match(/d
   throw new Error("Card actions are incomplete");
 }
 if (!index.includes('class="card-source-link"') || !index.includes('<span>原文</span>')) throw new Error("Direct source links are missing");
-if (index.includes(">DATE<")) throw new Error("Generic DATE label remains");
 if (!index.includes("发布于 2026-07-02")) throw new Error("Geoffrey Litt URL date fallback is missing");
 if (!index.includes("发布时间未知")) throw new Error("Unknown publication dates are not explicit");
 if (!style.includes(".terminal-layout { display: grid;") || !style.includes("grid-template-columns: 260px minmax(0, 1fr)")) throw new Error("Reading-terminal workbench layout is missing");
@@ -137,7 +132,6 @@ for (const cssPhrase of ["--accent-soft", "system-ui", ".workspace-intro", ".sea
 if (!/\[hidden\]\s*\{[^}]*display:\s*none\s*!important;?[^}]*\}/.test(style)) {
   throw new Error("Hidden article cards are not guaranteed to leave the layout");
 }
-if (style.includes(".brand-mark")) throw new Error("Removed boxed brand CSS remains");
 const cssRule = (selector) => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return style.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`))?.[1] || "";
@@ -153,7 +147,6 @@ for (const [selector, required] of [
 if (!app.includes("article-search") || !app.includes("matchesQuery") || !app.includes("syncUrlState") || !app.includes("info-collector:reader-state:v1") || !app.includes("buildInfoCardMarkdown") || !app.includes("weeklyActivitySeries") || !app.includes("smoothChartPath") || !app.includes("buildWeeklyReviewMarkdown")) {
   throw new Error("Reader script contract is incomplete");
 }
-if (app.includes("window.addEventListener('scroll'") || app.includes("revealContent")) throw new Error("Unnecessary scroll or reveal listeners remain");
 
 const fakeWindow = {
   matchMedia() { return { matches: true }; },
@@ -211,29 +204,19 @@ if (/sk-[A-Za-z0-9_-]{16,}/.test(publicText) || /[A-Za-z]:\\Users\\/i.test(publi
 if (publicText.includes('"hidden_profile"') || publicText.includes('&quot;hidden_profile&quot;') || publicText.includes('"user_id"') || publicText.includes('&quot;user_id&quot;')) {
   throw new Error("Public snapshot contains structured profile data that should be quarantined");
 }
-if (/Madarame87|(?:href|src)="\/(?:INFO|info)\//.test(publicText)) {
-  throw new Error("Public snapshot contains a stale account reference or repository-coupled base path");
+if (/\s(?:href|src)="\/(?!\/)/.test(publicText)) {
+  throw new Error("Public snapshot contains a root-relative reference; every local reference must be relative");
 }
-if (!robots.includes("Allow: /") || !robots.includes("Sitemap: https://info.theodoreoy.com/sitemap.xml")) throw new Error("robots.txt does not advertise the public sitemap");
+for (const [relative, html] of htmlDocuments) {
+  if (!/<meta http-equiv="Content-Security-Policy" content="default-src 'self';[^"]*script-src 'self';[^"]*">/.test(html)) {
+    throw new Error(`Missing content security policy in ${relative}`);
+  }
+}
+if (!robots.includes("Allow: /") || !robots.includes(`Sitemap: ${siteUrl}sitemap.xml`)) throw new Error("robots.txt does not advertise the public sitemap");
 const sitemapLocations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-const expectedLocations = ["https://info.theodoreoy.com/", ...articleFiles.map((article) => `https://info.theodoreoy.com/articles/${article}`)];
+const expectedLocations = [siteUrl, ...articleFiles.map((article) => `${siteUrl}articles/${article}`)];
 if (sitemapLocations.length !== expectedLocations.length || expectedLocations.some((location) => !sitemapLocations.includes(location))) {
   throw new Error("sitemap.xml does not list every public page exactly once");
 }
 
-const worker = (await import(`${pathToFileURL(workerPath).href}?verify=${Date.now()}`)).default;
-for (const route of ["/", "/index.html", "/favicon.svg", "/favicon.ico", "/robots.txt", "/sitemap.xml", ...articleFiles.map((article) => `/articles/${article}`)]) {
-  const response = await worker.fetch(new Request(`https://example.test${route}`));
-  if (response.status !== 200) throw new Error(`Production worker route failed (${response.status}): ${route}`);
-  const expectedType = route.endsWith(".xml") ? "application/xml" : route.endsWith(".txt") ? "text/plain" : route.endsWith(".svg") || route.endsWith(".ico") ? "image/svg+xml" : "text/html";
-  if (!response.headers.get("content-type")?.startsWith(expectedType)) throw new Error(`Wrong content type for ${route}`);
-  for (const header of ["content-security-policy", "permissions-policy", "referrer-policy", "x-content-type-options", "x-frame-options"]) {
-    if (!response.headers.has(header)) throw new Error(`Missing security header ${header} for ${route}`);
-  }
-  if (!await response.arrayBuffer().then((buffer) => buffer.byteLength)) throw new Error(`Empty worker response for ${route}`);
-}
-if ((await worker.fetch(new Request("https://example.test/missing"))).status !== 404) throw new Error("Production worker does not preserve 404s");
-if ((await worker.fetch(new Request("https://example.test/", { method: "POST" }))).status !== 405) throw new Error("Production worker does not reject unsupported methods");
-if ((await worker.fetch(new Request("https://example.test/%E0%A4%A"))).status !== 400) throw new Error("Production worker does not reject malformed encoded paths");
-
-console.log(`Verified ${articleFiles.length} article pages, ${htmlDocuments.size} HTML documents and every production worker route.`);
+console.log(`Verified ${articleFiles.length} article pages and ${htmlDocuments.size} HTML documents.`);

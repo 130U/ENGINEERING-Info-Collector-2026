@@ -1,7 +1,7 @@
 // 书签导入：只读 chrome.bookmarks，把配置文件夹（含子文件夹）下的链接合并进队列。
 
 import { normalizeUrl } from './normalize.js';
-import { mergeSource } from './queue.js';
+import { autoEnrollTypes, mergeSource } from './queue.js';
 import * as store from './storage.js';
 
 function findFolders(nodes, names, found) {
@@ -18,31 +18,13 @@ function collectUrls(node, folderName, items) {
   }
 }
 
-export function importFolderNames(meta) {
-  return [...new Set([
-    ...(meta.settings.folders || []),
-    ...Object.values(meta.settings.typeFolders || {}).flat(),
-  ].filter(Boolean))];
-}
-
-export function autoTypesForFolder(meta, folderName) {
-  const routed = Object.entries(meta.settings.typeFolders || {})
-    .filter(([, folders]) => (folders || []).includes(folderName))
-    .map(([type]) => type)
-    .filter((type) => meta.types[type]);
-  if (routed.length) return routed;
-  return Object.entries(meta.types)
-    .filter(([, t]) => t.autoEnroll)
-    .map(([id]) => id);
-}
-
 export async function importFromBookmarks() {
   const meta = await store.loadMeta();
-  const folders = importFolderNames(meta);
+  const autoTypes = autoEnrollTypes(meta);
 
   const tree = await chrome.bookmarks.getTree();
   const found = [];
-  findFolders(tree, folders, found);
+  findFolders(tree, meta.settings.folders, found);
   const items = [];
   for (const f of found) collectUrls(f, f.title, items);
 
@@ -67,7 +49,7 @@ export async function importFromBookmarks() {
       url: it.url,
       title: it.title,
       source: { kind: 'bookmark', folderName: it.folderName, bookmarkId: it.id },
-      autoTypes: autoTypesForFolder(meta, it.folderName),
+      autoTypes,
       now,
     });
     if (changed) {

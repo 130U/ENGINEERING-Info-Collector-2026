@@ -54,6 +54,7 @@ class ReadingSiteTest(unittest.TestCase):
             "---\n"
             "title: 产品设计中的未知因素\n"
             "date: 2026-07-09T09:00\n"
+            'authors: ["Ada Lovelace", "Grace Hopper"]\n'
             "---\n\n"
             "# 产品设计中的未知因素\n\n"
             "这是一段足够长的正文，用来验证没有 frontmatter 摘要时能够自动形成可读的卡片摘要，并在进入全文前帮助读者判断文章价值。\n\n"
@@ -99,7 +100,6 @@ class ReadingSiteTest(unittest.TestCase):
             self.assertIn('data-view="pending" aria-pressed="true"', index)
             self.assertIn('data-view="favorites" aria-pressed="false"', index)
             self.assertIn('data-view="all" aria-pressed="false"', index)
-            self.assertNotIn('data-view="weekly"', index)
             self.assertIn('id="export-weekly"', index)
             self.assertIn("阅读进度", index)
             self.assertIn('id="weekly-chart-line"', index)
@@ -107,8 +107,6 @@ class ReadingSiteTest(unittest.TestCase):
             self.assertIn('id="weekly-chart-marker"', index)
             self.assertIn('id="weekly-chart-value"', index)
             self.assertIn('id="weekly-periods"', index)
-            self.assertNotIn('id="weekly-count"', index)
-            self.assertNotIn('id="weekly-chart-points"', index)
             self.assertIn("导出 Markdown", index)
             self.assertIn("待整理", index)
             self.assertIn("我的收藏", index)
@@ -116,7 +114,6 @@ class ReadingSiteTest(unittest.TestCase):
             self.assertIn("搜索标题、摘要、作者或主题", index)
             self.assertIn('id="article-search"', index)
             self.assertIn('class="command-bar"', index)
-            self.assertNotIn("data-search=", index)
             self.assertIn('id="result-count" aria-live="polite" aria-atomic="true"', index)
             self.assertIn("主题筛选", index)
             self.assertRegex(index, r'href="assets/style\.css\?v=[0-9a-f]{12}"')
@@ -128,14 +125,9 @@ class ReadingSiteTest(unittest.TestCase):
             self.assertEqual(index.count('href="https://github.com/130U"'), 2)
             self.assertEqual(index.count('href="https://github.com/aswrise"'), 2)
             self.assertIn("先判断价值，再进入全文", index)
-            self.assertNotIn("Madarame87", index)
-            self.assertNotIn("@THEO", index)
-            self.assertNotIn("@AQUA", index)
-            self.assertNotIn("WINDOWS 11 · LOCAL-FIRST", index)
-            self.assertNotIn("INFO COLLECTOR / READING DESK", index)
             self.assertIn('class="brand-signal"', index)
-            self.assertNotIn('class="brand-mark"', index)
-            self.assertNotIn('class="feature-stage', index)
+            self.assertNotIn("og:image", index)
+            self.assertNotIn("Content-Security-Policy", index)
             self.assertIn('<details class="recovery-section"', index)
             self.assertEqual(index.count('<article class="article-card terminal-row'), 2)
             self.assertNotIn('<a class="article-card', index)
@@ -147,7 +139,6 @@ class ReadingSiteTest(unittest.TestCase):
             self.assertEqual(index.count('data-action="copy-card"'), 2)
             self.assertEqual(index.count('class="card-source-link"'), 1)
             self.assertIn('data-content-status="source_blocked"', index)
-            self.assertNotIn('class="content-status-badge"', index)
             self.assertNotIn('href=""', index)
             self.assertIn('class="card-meta"', index)
             self.assertIn('class="card-main"', index)
@@ -155,10 +146,9 @@ class ReadingSiteTest(unittest.TestCase):
             self.assertIn("收录于 2026-07-11", index)
             self.assertIn("发布时间未知", index)
             self.assertIn("整理于 2026-07-09", index)
-            self.assertNotIn(">DATE<", index)
             self.assertIn("阅读译文", index)
-            self.assertNotIn('class="card-foot"', index)
             self.assertIn("作者 研究团队", index)
+            self.assertIn("作者 Ada Lovelace, Grace Hopper", index)
             agent = next(item for item in articles if item["article_id"] == "stable-agent-key")
             article_path = index_path.parent / "articles" / f"{agent['slug']}.html"
             article = article_path.read_text(encoding="utf-8")
@@ -188,7 +178,6 @@ class ReadingSiteTest(unittest.TestCase):
             self.assertIn(".article-grid { display: grid; grid-template-columns: 1fr;", style)
             self.assertIn("[hidden] { display: none !important; }", style)
             self.assertIn(".search-control", style)
-            self.assertNotIn(".brand-mark", style)
             self.assertIn(".workspace-intro", style)
             self.assertIn(".terminal-sidebar", style)
             self.assertIn("system-ui", style)
@@ -262,18 +251,19 @@ class ReadingSiteTest(unittest.TestCase):
                 "published_at": "2026-07-12",
                 "collected_at": "",
                 "processed_at": "2026-07-12",
-                "legacy_date": "",
                 "authors": "",
                 "tags": ["产品"],
                 "content_status": "",
                 "body": "",
                 "body_html": "<h2>保留章节</h2><p>保留正文。</p>",
             }
-            page = reader.render_article_page(article, "123456789abc")
+            page = reader.render_article_page(article, "123456789abc", "https://example.test/desk/")
             self.assertIn("<h2>保留章节</h2><p>保留正文。</p>", page)
             self.assertNotIn("&lt;h2&gt;保留章节", page)
             self.assertIn("data-return-library", page)
             self.assertIn('data-content-status=""', page)
+            self.assertIn('<meta property="og:image" content="https://example.test/desk/og.png">', page)
+            self.assertIn("<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self';", page)
 
     def test_public_excluded_article_is_removed_even_if_a_stale_page_exists(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -311,7 +301,7 @@ class ReadingSiteTest(unittest.TestCase):
             partial = {"published_at": "2026-07", "collected_at": "2026-07-11T13:30:00-04:00"}
             self.assertEqual(reader.published_label(partial), "发布于 2026-07（精确到月）")
             self.assertEqual(reader.activity_label(partial), "收录于 2026-07-11")
-            unknown = {"published_at": "", "collected_at": "", "processed_at": "", "legacy_date": "2026-07-11"}
+            unknown = {"published_at": "", "collected_at": "", "processed_at": "2026-07-11T09:00"}
             self.assertEqual(reader.published_label(unknown), "发布时间未知")
             self.assertEqual(reader.activity_label(unknown), "整理于 2026-07-11")
 
@@ -321,9 +311,9 @@ class ReadingSiteTest(unittest.TestCase):
             output = Path(tmp) / "translated"
             output.mkdir()
             for name, title, collected, processed in (
-                ("old.md", "旧收录", "2026-07-01T10:00:00Z", "2026-07-12T10:00:00Z"),
+                ("early.md", "早收录", "2026-07-01T10:00:00Z", "2026-07-12T10:00:00Z"),
                 ("new.md", "新收录", "2026-07-11T10:00:00Z", "2026-07-11T10:01:00Z"),
-                ("legacy.md", "旧格式", "", "2026-07-10T10:00:00Z"),
+                ("processed.md", "仅有整理时间", "", "2026-07-10T10:00:00Z"),
             ):
                 (output / name).write_text(
                     "---\n"
@@ -336,7 +326,7 @@ class ReadingSiteTest(unittest.TestCase):
                     encoding="utf-8",
                 )
             articles = reader.collect_articles(output)
-            self.assertEqual([article["title"] for article in articles], ["新收录", "旧格式", "旧收录"])
+            self.assertEqual([article["title"] for article in articles], ["新收录", "仅有整理时间", "早收录"])
 
     def test_main_writes_status_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,6 +1,6 @@
 # Info Collector Windows 安装与使用检查
 
-适用环境：Windows 11、Google Chrome、Python 3.9+。Dashboard 支持手动触发文章翻译、摘要与标签、技术周报和静态阅读站；安装器不安装计划任务或播客/Pi 流。
+适用环境：Windows 11、Google Chrome、Python 3.9+。Dashboard 支持手动触发文章翻译、摘要与标签、技术周报和静态阅读站。
 
 ## 1. 准备 API Key
 
@@ -66,8 +66,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
 1. 在 Chrome 建立名为“收藏文章”的书签文件夹。
 2. 把一篇公开文章加入该文件夹。
 3. 打开 Info Collector Dashboard。
-4. 点击“立即导入书签”，确认任务为“待处理”。
-5. 点击“立即桥接同步”，确认没有 Host 错误。
+4. 点击“导入书签”，确认任务为“待处理”。
+5. 点击“桥接同步”，确认没有 Host 错误。
 6. 若页面需要登录，先打开正文页并点击扩展“加入文章队列”，保存当前可见正文；再点击该任务的“▶ 立即处理”。
 7. 等待状态变为“处理中”；翻译结束后再次桥接，确认变为“已完成”。
 8. 打开 `%USERPROFILE%\Documents\InfoCollector`（或自定义目录），确认生成中文 Markdown；401 或登录页样板必须显示为可恢复失败，不能显示为完成。
@@ -86,7 +86,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
 
 ## 7. 检查技术周报
 
-在 Dashboard 点击“生成本周周报”。周报流不会再次调用模型，
+在 Dashboard 点击“生成本周处理回顾”。周报流不会再次调用模型，
 只聚合当前周（周一至周日）已经包含 Summary/Tags 的完成记录。确认：
 
 1. 流水线状态显示“周报流 ✓ 成功”；

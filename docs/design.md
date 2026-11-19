@@ -21,7 +21,7 @@
 | 约定 | 实现 |
 |---|---|
 | 事实来源 | 扩展自有存储，书签只是导入源 |
-| 书签写权限 | 不写入书签，manifest 只读 |
+| 书签写权限 | 不写入书签，只读取书签树 |
 | Processing Type | `translate` 是文章翻译类型，类型由注册表定义 |
 | 外部流集成方式 | 文件 spool 契约 + Native Messaging 桥 |
 | sync 存储布局 | 分桶存储 + local 归档 |
@@ -108,10 +108,9 @@
 outbox/<type>.json         扩展写（经 host），外部流读。该类型全部 pending 文章。
 inbox/<uuid>.json          外部流写，扩展读（经 host）。Completion Report。
 inbox/processed/           扩展确认（ack）后 host 把报告移到这里留痕。
-flows.json                 流程注册表（setup 写入）：type → {command, lockFile,
-                           intervalSeconds, label}。host 据此触发流程与探测运行状态。
-state/<type>-status.json   流程自己维护的运行状态：lastRun{startedAt, trigger,
-                           outcome…} 与 lastScheduledStartAt（估算下次定时运行用）。
+flows.json                 流程注册表（setup 写入）：type → {command, scriptSha256,
+                           lockFile}。host 据此触发流程与探测运行状态。
+state/<type>-status.json   流程自己维护的运行状态：lastRun{startedAt, outcome…}。
 state/<type>-trigger.log   手动触发的流程输出。
 ```
 
@@ -137,45 +136,30 @@ state/<type>-trigger.log   手动触发的流程输出。
 ## 桥接节奏
 
 - `chrome.alarms`：`import`（30 分钟）扫描书签文件夹；`bridge`（10 分钟）
-  与 host 做一次同步会话。Dashboard 上有手动「立即导入 / 立即同步」按钮。
+  与 host 做一次同步会话。Dashboard 上有手动「导入书签 / 桥接同步」按钮。
 - 桥接会话：connectNative → 发送 `sync`（携带各类型 outbox 内容 + 上次
   已应用报告的 ack）→ host 写 outbox、移走已 ack 报告、返回 inbox 新报告
   与各流程运行状态 → 扩展应用 → 断开。
 - 立即触发：Dashboard 待处理行的「▶ 立即处理」= 先桥接刷新
   outbox，再发 `trigger` 让 host 按 flows.json 启动该类型流程（队列级，
   会处理该类型全部待处理文章），随后安排 3/8 分钟后的跟进桥接尽快收报告。
-  状态区显示各流程：运行中 / 上次结果（手动或定时）/ 预计下次定时运行时间
-  （由 `lastScheduledStartAt + intervalSeconds` 推算，手动触发不污染锚点）。
+  状态区显示各流程：运行中 / 上次结果。
 
-## 翻译流的两个实现
+## 翻译流
 
-`flows/` 提供两个满足同一 spool 契约的 translate 流，`scripts/setup.ps1`
-在 Windows 上安装通用版：
+`scripts/setup.ps1` 在 Windows 上安装 translate 流：
 
-- **`translate-claude-api.py`（通用，随仓库分发）**：纯 Python 标准库支持
+- **`translate.py`**：纯 Python 标准库支持
   DeepSeek API 和 Claude API。两条 provider 路径共享同一份已验证正文：显式用户
   页面快照优先，其次是可选的绝对路径抽取器和受限内置抓取。401/403、登录页样板、
   网络故障和模型故障使用不同的 code/stage/retryable/operatorAction；失败不生成占位
   译文。长文使用分段检查点，自动重试和成本均有硬预算。Windows 配置只保存
   `credentialRef`，Key 由 DPAPI 保护；`--check` 验证凭据与目录。
-- **`translate-bookmarks.py`（作者个人流）**：调 `pi` CLI +
-  translate-article skill 存入 Obsidian，`scripts/setup-pi-flow.sh` 安装。
-
-## translate 流
-
-`flows/translate-bookmarks.py` 按以下流程处理文章：
-
-- 不读写 Chrome Bookmarks 文件。
-- 读 `outbox/translate.json`；跳过本地 `state/translate-reported.json` 里
-  已报告过的 URL（防 outbox 未刷新时重复翻译）。
-- 调用 `pi -p` + translate-article skill。
-- 成功后原子写 inbox 报告，更新本地已报告清单，追加 action-history。
-- outbox 不存在时打日志静默退出。
 
 ## Dashboard / Popup
 
 - **dashboard.html**：状态计数、sync 配额条、按状态/类型过滤、搜索；
-  行内操作：标记完成、忽略、重新排队、删除；全局操作：立即导入、立即同步、
+  行内操作：标记完成、忽略、重新排队、删除；全局操作：导入书签、桥接同步、
   生成并打开静态阅读库、生成周报、批量粘贴已完成 URL（自动化桥失效时的手动兜底）、导出 JSON；
   设置区：书签文件夹名、新增 Processing Type（只增不删）。
 - **popup**：显示当前标签页入队状态。用户点击保存时，从当前标签页提取可见文章正文，
@@ -187,7 +171,7 @@ state/<type>-trigger.log   手动触发的流程输出。
 `flows/generate-reading-site.py` 读取 `config.json` 中 `outputDir` 根目录的中文
 Markdown，确定性生成 `阅读站/index.html`、`阅读站/articles/*.html` 和前端资源：
 
-- 索引页按精选、恢复队列、主题与最近收录组织；登录页/受限来源不会混入可信译文；
+- 索引页按阅读状态、恢复队列、主题与最近收录组织；登录页/受限来源不会混入可信译文；
 - 单篇页按关键词 → Summary → 中文译文 → 原文链接的阅读顺序组织；
 - Markdown 原始 HTML 一律转义，外链只允许 `http` / `https`；
 - 文章缺少 Summary/Tags 时，用正文首段与固定关键词规则生成展示兜底；
@@ -195,6 +179,8 @@ Markdown，确定性生成 `阅读站/index.html`、`阅读站/articles/*.html` 
 - `reading-site` 注册在 `flows.json`，Dashboard 触发后生成并打开默认浏览器。
 
 ## 系统边界
+
+以下操作不在系统范围内：
 
 - 写书签（归档/删除导入过的书签）。
 - Processing Type 的删除/改名。

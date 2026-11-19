@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 
 const STATUS_TEXT = { pending: '⏳ 待处理', processing: '⚙ 处理中', done: '✓ 已完成', failed: '✕ 失败', ignored: '– 已忽略' };
-const TYPE_TEXT = { translate: '文章翻译', podcast: '播客处理' };
+const TYPE_TEXT = { translate: '文章翻译' };
 
 let tab;
 
@@ -59,19 +59,16 @@ async function render() {
   const resp = await chrome.runtime.sendMessage({ cmd: 'getTabStatus', url: tab?.url || '' });
   const box = $('status');
   const save = $('save');
-  const savePodcast = $('save-podcast');
   if (!resp.ok || !resp.queueable) {
     box.textContent = '该页面无法入队（仅支持 http/https）。';
     box.dataset.tone = 'bad';
     save.hidden = true;
-    savePodcast.hidden = true;
     return;
   }
   if (!resp.record) {
     box.textContent = '尚未入队，可以加入文章处理流水线。';
     box.dataset.tone = 'idle';
     save.hidden = false;
-    savePodcast.hidden = false;
     return;
   }
   const jobs = Object.entries(resp.record.jobs || {});
@@ -98,10 +95,9 @@ async function render() {
     box.appendChild(row);
   }
   save.hidden = true;
-  savePodcast.hidden = resp.archived || !!resp.record.jobs?.podcast;
 }
 
-async function save(types, button) {
+async function save(button) {
   button.disabled = true;
   button.textContent = '正在读取当前页面…';
   let capture = null;
@@ -110,9 +106,9 @@ async function save(types, button) {
   } catch (_error) {
     // Restricted browser pages may reject script injection; network extraction remains available.
   }
-  const resp = await chrome.runtime.sendMessage({ cmd: 'saveTab', url: tab.url, title: tab.title, types, capture });
+  const resp = await chrome.runtime.sendMessage({ cmd: 'saveTab', url: tab.url, title: tab.title, capture });
   button.disabled = false;
-  button.textContent = types?.includes('podcast') ? '加入播客队列' : '加入文章队列';
+  button.textContent = '加入文章队列';
   if (!resp.ok) {
     $('status').textContent = resp.error || '保存失败';
     $('status').dataset.tone = 'bad';
@@ -126,8 +122,7 @@ async function save(types, button) {
   render();
 }
 
-$('save').addEventListener('click', () => save(undefined, $('save')));
-$('save-podcast').addEventListener('click', () => save(['podcast'], $('save-podcast')));
+$('save').addEventListener('click', () => save($('save')));
 
 $('dashboard').addEventListener('click', (e) => {
   e.preventDefault();

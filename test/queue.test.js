@@ -7,8 +7,9 @@ import {
   isFinished,
   outboxEntries,
   reclaimIfStale,
-  manualSaveTypes,
+  autoEnrollTypes,
 } from '../extension/lib/queue.js';
+import { defaultMeta } from '../extension/lib/storage.js';
 
 const NOW = '2026-07-05T10:00:00Z';
 const LATER = '2026-07-05T11:00:00Z';
@@ -147,28 +148,22 @@ test('重新排队清空 processedAt 与 lastError', () => {
 });
 
 test('setJobStatus 可为缺失处理类型创建 pending job', () => {
-  const rec = setJobStatus(fresh(), 'podcast', 'pending', LATER);
-  assert.equal(rec.jobs.podcast.status, 'pending');
-  assert.equal(rec.jobs.podcast.processedAt, null);
+  const rec = setJobStatus(fresh(), 'book', 'pending', LATER);
+  assert.equal(rec.jobs.book.status, 'pending');
+  assert.equal(rec.jobs.book.processedAt, null);
 });
 
-test('收藏播客重复 URL：只保留一条记录和一个 podcast job', () => {
-  let rec = mergeSource(null, {
-    articleKey: KEY, url: KEY, title: 'Podcast',
-    source: { kind: 'bookmark', folderName: '收藏播客', bookmarkId: 'p1' },
-    autoTypes: ['podcast'], now: NOW,
-  }).record;
-  rec = mergeSource(rec, {
-    articleKey: KEY, url: KEY, title: 'Podcast again',
-    source: { kind: 'bookmark', folderName: '收藏播客', bookmarkId: 'p2' },
-    autoTypes: ['podcast'], now: LATER,
+test('同一 URL 的两个书签：只保留一条记录和一个 job', () => {
+  const rec = mergeSource(fresh(), {
+    articleKey: KEY, url: KEY, title: 'T again',
+    source: { kind: 'bookmark', folderName: '收藏文章', bookmarkId: 'b2' },
+    autoTypes: ['translate'], now: LATER,
   }).record;
 
-  assert.deepEqual(Object.keys(rec.jobs), ['podcast']);
-  assert.equal(rec.jobs.podcast.status, 'pending');
+  assert.deepEqual(Object.keys(rec.jobs), ['translate']);
+  assert.equal(rec.jobs.translate.status, 'pending');
   assert.equal(rec.sources.length, 2);
-  assert.equal(outboxEntries(new Map([[KEY, rec]]), 'podcast').length, 1);
-  assert.equal(outboxEntries(new Map([[KEY, rec]]), 'translate').length, 0);
+  assert.equal(outboxEntries(new Map([[KEY, rec]]), 'translate').length, 1);
 });
 
 test('processing 认领：pending/failed 可认领，done/ignored 不降级', () => {
@@ -238,14 +233,9 @@ test('outbox 含 pending 与 failed，不含 done/ignored，按入队时间排�
   assert.deepEqual(entries.map((e) => e.articleKey), ['https://a.com/1', 'https://a.com/2']);
 });
 
-test('manualSaveTypes 默认用 autoEnroll，显式 types 覆盖且校验注册表', () => {
-  const meta = {
-    types: {
-      translate: { autoEnroll: true },
-      podcast: { autoEnroll: false },
-    },
-  };
-  assert.deepEqual(manualSaveTypes(meta), ['translate']);
-  assert.deepEqual(manualSaveTypes(meta, ['podcast']), ['podcast']);
-  assert.throws(() => manualSaveTypes(meta, ['missing']), /未注册/);
+test('新文章只为 autoEnroll 类型建 job；默认只有 translate', () => {
+  assert.deepEqual(defaultMeta(NOW).settings.folders, ['收藏文章']);
+  assert.deepEqual(autoEnrollTypes(defaultMeta(NOW)), ['translate']);
+  const meta = { types: { translate: { autoEnroll: true }, book: { autoEnroll: false } } };
+  assert.deepEqual(autoEnrollTypes(meta), ['translate']);
 });

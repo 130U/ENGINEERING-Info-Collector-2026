@@ -53,6 +53,15 @@ class InfoCollectorHostTest(unittest.TestCase):
                 self.assertFalse(denied["ok"])
                 self.assertIn("用户目录", denied["error"])
                 outside.unlink()
+
+                program = home / "Documents" / "InfoCollector" / "run.bat"
+                program.write_text("@echo off\n", encoding="utf-8")
+                (state / "weekly-report-status.json").write_text(json.dumps({
+                    "latestReport": str(program),
+                }), encoding="utf-8")
+                refused = host.handle_open_output({"processingType": "weekly-report"})
+                self.assertFalse(refused["ok"])
+                self.assertEqual(opened, [output.resolve()])
             finally:
                 if old_home is None:
                     os.environ.pop("INFO_COLLECTOR_HOME", None)
@@ -67,7 +76,6 @@ class InfoCollectorHostTest(unittest.TestCase):
             else:
                 node_bin = home / ".nvm" / "versions" / "node" / "v99.0.0" / "bin"
             node_bin.mkdir(parents=True)
-            (node_bin / "pi").write_text("#!/bin/sh\n", encoding="utf-8")
 
             old_home = os.environ.get("INFO_COLLECTOR_HOME")
             old_path = os.environ.get("PATH")
@@ -144,6 +152,7 @@ class InfoCollectorHostTest(unittest.TestCase):
                             "articleKey": "https://example.test/a",
                             "url": "https://example.test/a",
                             "title": "A",
+                            "captureFile": str(home / "elsewhere.json"),
                         }],
                     },
                     "acks": [],
@@ -151,6 +160,7 @@ class InfoCollectorHostTest(unittest.TestCase):
                 self.assertTrue(response["ok"])
                 outbox = json.loads((home / ".info-collector" / "outbox" / "translate.json").read_text(encoding="utf-8"))
                 self.assertEqual(outbox["articles"][0]["title"], "A")
+                self.assertNotIn("captureFile", outbox["articles"][0])
 
                 marker = home / "triggered.txt"
                 trusted_bin = home / ".info-collector" / "bin"
@@ -168,7 +178,6 @@ class InfoCollectorHostTest(unittest.TestCase):
                         ],
                         "scriptSha256": hashlib.sha256(flow_script.read_bytes()).hexdigest(),
                         "lockFile": str(home / ".info-collector" / "state" / "translate.lock"),
-                        "intervalSeconds": None,
                     },
                 }
                 (home / ".info-collector" / "flows.json").write_text(json.dumps(flows), encoding="utf-8")

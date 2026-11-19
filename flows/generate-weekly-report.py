@@ -27,7 +27,6 @@ PROCESSED_DIR = INBOX_DIR / "processed"
 STATUS_FILE = SPOOL / "state" / "weekly-report-status.json"
 LOCK_FILE = SPOOL / "state" / "weekly-report.lock"
 LOG_FILE = SPOOL / "state" / "weekly-report.log"
-TRIGGER = "manual"
 
 
 def configure_text_stdio():
@@ -275,7 +274,7 @@ def main(argv=None):
         log("周报流程已在运行，跳过")
         return 0
     started = dt.datetime.now().astimezone()
-    last_run = {"startedAt": started.isoformat(timespec="seconds"), "trigger": TRIGGER, "outcome": "running"}
+    last_run = {"startedAt": started.isoformat(timespec="seconds"), "outcome": "running"}
     update_status({"lastRun": last_run})
     try:
         path, articles, start, end = generate_weekly_report(week_start=args.week_start)

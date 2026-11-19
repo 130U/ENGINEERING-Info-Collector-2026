@@ -30,13 +30,18 @@ CONFIG_FILE = SPOOL / "config.json"
 STATUS_FILE = SPOOL / "state" / "reading-site-status.json"
 LOCK_FILE = SPOOL / "state" / "reading-site.lock"
 LOG_FILE = SPOOL / "state" / "reading-site.log"
-TRIGGER = "manual"
 
-# Records intentionally withheld from the public interview showcase. The source
-# library remains untouched, but these slugs must never be rendered publicly.
+# Records withheld from the public reading desk. The source library remains
+# untouched, but these slugs are never rendered.
 PUBLIC_EXCLUDED_ARTICLE_SLUGS = {
     "article-8a0810a163f4",
+    "article-53d7eead7cb1",
 }
+# The public desk is served as static files, so its policy travels in the page.
+PUBLIC_CSP = (
+    "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
+    "connect-src 'none'; base-uri 'none'; form-action 'none'"
+)
 
 KEYWORD_RULES = [
     ("智能体", r"智能体|agent(?:ic|s)?|coding agent|代理"),
@@ -106,9 +111,11 @@ def parse_scalar(raw):
         return ""
     try:
         value = json.loads(raw)
-        return value if isinstance(value, str) else str(value)
     except json.JSONDecodeError:
         return raw.strip("'\"")
+    if isinstance(value, list):
+        return ", ".join(str(item).strip() for item in value if str(item).strip())
+    return value if isinstance(value, str) else str(value)
 
 
 def split_document(text):
@@ -258,9 +265,6 @@ def activity_label(article):
     processed = valid_date_part(article.get("processed_at"))
     if processed:
         return f"整理于 {processed}"
-    legacy = valid_date_part(article.get("legacy_date"))
-    if legacy:
-        return f"整理于 {legacy}"
     return "收录时间未知"
 
 
@@ -329,8 +333,7 @@ def read_article(path):
             meta.get("published_at") or meta.get("published"), source
         ),
         "collected_at": str(meta.get("collected_at") or "").strip(),
-        "processed_at": str(meta.get("processed_at") or "").strip(),
-        "legacy_date": str(meta.get("date") or "").strip(),
+        "processed_at": str(meta.get("processed_at") or meta.get("date") or "").strip(),
         "authors": str(meta.get("authors") or "").strip(),
         "content_status": content_status,
         "summary": summary,
@@ -350,10 +353,7 @@ def collect_articles(output_dir):
             log(f"跳过无法读取的文章 {path.name}: {exc}")
     return sorted(
         articles,
-        key=lambda item: (
-            item["collected_at"] or item["processed_at"] or item["legacy_date"],
-            item["title"],
-        ),
+        key=lambda item: (item["collected_at"] or item["processed_at"], item["title"]),
         reverse=True,
     )
 
@@ -483,23 +483,29 @@ def render_markdown(body, document_title=""):
     return "\n".join(output)
 
 
-def page_shell(title, description, content, asset_prefix="assets", body_class="", asset_version=""):
+def page_shell(title, description, content, asset_prefix="assets", body_class="", asset_version="", site_url=""):
     asset_suffix = f"?v={escape_attr(asset_version)}" if asset_version else ""
     root_prefix = "../" if asset_prefix.startswith("..") else ""
+    public_policy = social_image = ""
+    if site_url:
+        image = escape_attr(f"{site_url.rstrip('/')}/og.png")
+        public_policy = f'\n  <meta http-equiv="Content-Security-Policy" content="{PUBLIC_CSP}">'
+        social_image = (
+            f'\n  <meta property="og:image" content="{image}">'
+            '\n  <meta name="twitter:card" content="summary_large_image">'
+            f'\n  <meta name="twitter:image" content="{image}">'
+        )
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8">{public_policy}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{escape_attr(description)}">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f6f7f8">
   <meta property="og:type" content="website">
   <meta property="og:title" content="{escape_attr(title)} · Info Collector">
-  <meta property="og:description" content="{escape_attr(description)}">
-  <meta property="og:image" content="https://info-collector-reading-desk.jiligualapiqiu.chatgpt.site/og.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://info-collector-reading-desk.jiligualapiqiu.chatgpt.site/og.png">
+  <meta property="og:description" content="{escape_attr(description)}">{social_image}
   <title>{html.escape(title)} · Info Collector</title>
   <link rel="icon" type="image/svg+xml" href="{root_prefix}favicon.svg">
   <link rel="stylesheet" href="{asset_prefix}/style.css{asset_suffix}">
@@ -536,7 +542,7 @@ def render_tag(tag, active=False, button=False, count=None):
     return f'<span class="keyword">{html.escape(tag)}</span>'
 
 
-def render_index(articles, asset_version=""):
+def render_index(articles, asset_version="", site_url=""):
     ready = [article for article in articles if not article["content_status"]]
     recovery = [article for article in articles if article["content_status"]]
     counts = Counter(tag for article in ready for tag in article["tags"])
@@ -556,7 +562,7 @@ def render_index(articles, asset_version=""):
             if article["authors"] else ""
         )
         cards.append(f"""
-        <article class="article-card terminal-row" data-article-id="{escape_attr(article['article_id'])}" data-tags="{escape_attr('|'.join(article['tags']))}" data-title="{escape_attr(article['title'])}" data-summary="{escape_attr(article['summary'])}" data-authors="{escape_attr(article['authors'])}" data-source="{escape_attr(article['source'])}" data-published-value="{escape_attr(article['published_at'])}" data-collected-value="{escape_attr(article['collected_at'])}" data-processed-value="{escape_attr(article['processed_at'] or article['legacy_date'])}" data-content-status="">
+        <article class="article-card terminal-row" data-article-id="{escape_attr(article['article_id'])}" data-tags="{escape_attr('|'.join(article['tags']))}" data-title="{escape_attr(article['title'])}" data-summary="{escape_attr(article['summary'])}" data-authors="{escape_attr(article['authors'])}" data-source="{escape_attr(article['source'])}" data-published-value="{escape_attr(article['published_at'])}" data-collected-value="{escape_attr(article['collected_at'])}" data-processed-value="{escape_attr(article['processed_at'])}" data-content-status="">
           <div class="card-index" aria-hidden="true">{index + 1:02d}</div>
           <div class="card-main">
             <div class="card-context">{source_link}<div class="keyword-row">{tag_html}</div></div>
@@ -600,7 +606,7 @@ def render_index(articles, asset_version=""):
             "translation_missing": "译文缺失",
         }.get(article["content_status"], "等待处理")
         recovery_cards.append(f"""
-        <article class="recovery-card" data-article-id="{escape_attr(article['article_id'])}" data-title="{escape_attr(article['title'])}" data-summary="{escape_attr(article['summary'])}" data-tags="{escape_attr('|'.join(article['tags']))}" data-authors="{escape_attr(article['authors'])}" data-source="{escape_attr(article['source'])}" data-published-value="{escape_attr(article['published_at'])}" data-collected-value="{escape_attr(article['collected_at'])}" data-processed-value="{escape_attr(article['processed_at'] or article['legacy_date'])}" data-content-status="{escape_attr(article['content_status'])}" data-article-href="articles/{article['slug']}.html">
+        <article class="recovery-card" data-article-id="{escape_attr(article['article_id'])}" data-title="{escape_attr(article['title'])}" data-summary="{escape_attr(article['summary'])}" data-tags="{escape_attr('|'.join(article['tags']))}" data-authors="{escape_attr(article['authors'])}" data-source="{escape_attr(article['source'])}" data-published-value="{escape_attr(article['published_at'])}" data-collected-value="{escape_attr(article['collected_at'])}" data-processed-value="{escape_attr(article['processed_at'])}" data-content-status="{escape_attr(article['content_status'])}" data-article-href="articles/{article['slug']}.html">
           <div class="recovery-status">{html.escape(status_label)}</div>
           <h3>{html.escape(article['title'])}</h3>
           <p>{reason}</p>{recovery_links}
@@ -644,10 +650,10 @@ def render_index(articles, asset_version=""):
     </div>
     <div class="reader-feedback" id="reader-feedback" role="status" aria-live="polite" aria-atomic="true"></div>
   </main>"""
-    return page_shell("技术情报终端", "Info Collector 本地优先的技术情报收集、筛选与阅读终端", content, body_class="library-page", asset_version=asset_version)
+    return page_shell("技术情报终端", "Info Collector 本地优先的技术情报收集、筛选与阅读终端", content, body_class="library-page", asset_version=asset_version, site_url=site_url)
 
 
-def render_article_page(article, asset_version=""):
+def render_article_page(article, asset_version="", site_url=""):
     tags = "".join(render_tag(tag) for tag in article["tags"])
     meta_items = [
         html.escape(published_label(article)),
@@ -712,7 +718,7 @@ def render_article_page(article, asset_version=""):
       {original}
     </article>
   </main>"""
-    return page_shell(article["title"], article["summary"], content, asset_prefix="../assets", body_class="article-page", asset_version=asset_version)
+    return page_shell(article["title"], article["summary"], content, asset_prefix="../assets", body_class="article-page", asset_version=asset_version, site_url=site_url)
 
 
 def asset_source_dir():
@@ -729,7 +735,8 @@ def asset_source_dir():
 def frontend_asset_version(source_assets):
     digest = hashlib.sha256()
     for name in ("style.css", "app.js"):
-        digest.update((Path(source_assets) / name).read_bytes())
+        # Hash LF content so a Windows checkout and CI produce the same version.
+        digest.update((Path(source_assets) / name).read_bytes().replace(b"\r\n", b"\n"))
     return digest.hexdigest()[:12]
 
 
@@ -775,7 +782,7 @@ def main(argv=None):
         log("阅读站生成流程已在运行，跳过")
         return 0
     started = dt.datetime.now().astimezone()
-    last_run = {"startedAt": started.isoformat(timespec="seconds"), "trigger": TRIGGER, "outcome": "running"}
+    last_run = {"startedAt": started.isoformat(timespec="seconds"), "outcome": "running"}
     update_status({"lastRun": last_run})
     try:
         index_path, articles = build_site(output_dir, site_dir=site_dir)

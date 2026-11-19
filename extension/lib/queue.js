@@ -125,15 +125,9 @@ export function setJobStatus(record, type, status, now) {
   return rec;
 }
 
-export function manualSaveTypes(meta, requestedTypes) {
-  if (requestedTypes === undefined) {
-    return Object.entries(meta.types).filter(([, t]) => t.autoEnroll).map(([id]) => id);
-  }
-  const types = [...new Set((requestedTypes || []).map((s) => String(s).trim()).filter(Boolean))];
-  if (!types.length) throw new Error('至少选择一个处理类型');
-  const missing = types.find((id) => !meta.types[id]);
-  if (missing) throw new Error(`处理类型 ${missing} 未注册`);
-  return types;
+// 新文章（书签导入或 popup 保存）自动建 pending job 的处理类型。
+export function autoEnrollTypes(meta) {
+  return Object.entries(meta.types).filter(([, t]) => t.autoEnroll).map(([id]) => id);
 }
 
 // 认领过期回退：流程已不在运行却仍是 processing → 回到 pending（不计失败次数）。

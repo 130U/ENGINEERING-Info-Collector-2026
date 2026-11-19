@@ -17,7 +17,7 @@ test('README presents the reader workflow in English', () => {
   }
 });
 
-test('Pages 部署只允许手动触发，避免项目站自动占用账号自定义域名路径', () => {
+test('Pages 部署只允许手动触发', () => {
   const workflow = readFileSync(join(ROOT, '.github', 'workflows', 'deploy-reading-site.yml'), 'utf8');
   assert.match(workflow, /workflow_dispatch:/);
   assert.equal(workflow.includes('push:'), false);

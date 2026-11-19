@@ -1,4 +1,4 @@
-// Queue Record 的压缩编解码与分桶（ADR 0003）。
+// Queue Record 的压缩编解码与分桶。
 // sync 配额按字节计，存储侧用短字段名；storage 层之外只见完整形态。
 
 export const BUCKET_COUNT = 32;

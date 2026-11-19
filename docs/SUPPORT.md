@@ -15,4 +15,4 @@ Info Collector 0.2 supports a controlled commercial pilot on Windows 11, Chrome 
 
 Before a pilot release, run the checklist in [OPERATIONS.md](OPERATIONS.md) with representative public, 401/403, login-wall, long-form and multilingual sources. Record the source mix, success denominator, latency, cost and human translation review.
 
-macOS and Linux are not in the supported pilot matrix. `scripts/setup.sh` is intentionally disabled until a Keychain-backed installer and equivalent integration suite exist.
+macOS and Linux are not in the supported pilot matrix.

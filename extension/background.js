@@ -4,7 +4,7 @@
 import * as store from './lib/storage.js';
 import { importFromBookmarks } from './lib/importer.js';
 import { bridgeSync, openFlowOutput, savePageCapture, triggerFlow } from './lib/bridge.js';
-import { mergeSource, setJobStatus, applyResult, manualSaveTypes } from './lib/queue.js';
+import { mergeSource, setJobStatus, applyResult, autoEnrollTypes } from './lib/queue.js';
 import { normalizeUrl } from './lib/normalize.js';
 
 chrome.runtime.onInstalled.addListener(init);
@@ -94,7 +94,7 @@ async function handle(msg) {
         }
         if (canRecoverBlocked) await store.removeRecords([key]);
         const meta = await store.loadMeta();
-        const autoTypes = manualSaveTypes(meta, msg.types);
+        const autoTypes = autoEnrollTypes(meta);
         const prev = canRecoverBlocked ? null : await store.getRecord(key);
         let captureInfo = null;
         let captureWarning = '';
@@ -203,11 +203,8 @@ async function handle(msg) {
       return serial(async () => {
         const folders = (msg.folders || []).map((s) => String(s).trim()).filter(Boolean);
         if (!folders.length) return { ok: false, error: '至少保留一个文件夹名' };
-        const podcastFolders = (msg.podcastFolders || []).map((s) => String(s).trim()).filter(Boolean);
         const meta = await store.loadMeta();
         meta.settings.folders = folders;
-        meta.settings.typeFolders ||= {};
-        meta.settings.typeFolders.podcast = podcastFolders.length ? podcastFolders : ['收藏播客'];
         await store.saveMeta(meta);
         return { ok: true };
       });

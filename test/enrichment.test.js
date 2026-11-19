@@ -20,8 +20,8 @@ test('摘要限长，标签别名归一、去重并限制为 5 个', () => {
   assert.deepEqual(meta.tags, ['人工智能', '智能体', '记忆系统', '开源', '产品']);
 });
 
-test('旧报告缺少摘要和标签时保持兼容', () => {
-  assert.deepEqual(normalizeSummaryTags({ savedTo: 'old.md' }), { savedTo: 'old.md' });
+test('报告缺少摘要和标签时原样保留', () => {
+  assert.deepEqual(normalizeSummaryTags({ savedTo: 'x.md' }), { savedTo: 'x.md' });
   assert.equal(jobSummary({ meta: {} }), '');
   assert.deepEqual(jobTags({ meta: {} }), []);
 });
@@ -30,7 +30,7 @@ test('相同标签按文章计数并按数量排序', () => {
   const records = [
     { jobs: { translate: { meta: { tags: ['智能体', '模型评估'] } } } },
     { jobs: { translate: { meta: { tags: ['智能体', '记忆系统'] } } } },
-    { jobs: { podcast: { meta: { tags: ['智能体'] } } } },
+    { jobs: { book: { meta: { tags: ['智能体'] } } } },
   ];
   assert.deepEqual([...collectTagCounts(records, 'translate')], [
     ['智能体', 2],

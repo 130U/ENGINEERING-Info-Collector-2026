@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+type: software
+title: "Info Collector"
+version: "V_202611"
+date-released: 2026-11-19
+abstract: "How does a saved article become part of a library that gets read, when the browser can capture but cannot work, and a model can translate but cannot be trusted? The Chrome extension, the local worker, the reading desk and 85 tests."
+authors:
+  - family-names: Ouyang
+    given-names: "Letao (Theodore)"
+repository-code: "https://github.com/130U/ENGINEERING-Info-Collector-2026"
+url: "https://www.theodoreoy.com/ENGINEERING-Info-Collector-2026/"
+license: Apache-2.0
+keywords:
+  - chrome extension
+  - native messaging
+  - local-first
+  - knowledge management
+  - markdown
+  - windows
+references:
+  - type: software
+    title: "Info Collector"
+    authors:
+      - name: "Shi Wang"
+    repository-code: "https://github.com/aswrise/info-collector"
+preferred-citation:
+  type: software
+  title: "Info Collector"
+  authors:
+    - family-names: Ouyang
+      given-names: "Letao (Theodore)"
+  year: 2026
+  url: "https://www.theodoreoy.com/ENGINEERING-Info-Collector-2026/"

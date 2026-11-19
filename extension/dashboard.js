@@ -45,7 +45,6 @@ function renderTypeSelects() {
   }
   $('f-type').value = view.type;
   $('s-folders').value = (meta.settings.folders || []).join(', ');
-  $('s-podcast-folders').value = ((meta.settings.typeFolders || {}).podcast || []).join(', ');
 }
 
 function renderTiles() {
@@ -121,8 +120,8 @@ async function renderRuns() {
   for (const [key, label] of [['import', '书签导入'], ['bridge', '桥接同步']]) {
     const r = runs[key];
     if (!r) stations.push(stationEl(label, '<span class="muted">未运行</span>'));
-    else if (r.ok) stations.push(stationEl(label, `${fmtTime(r.at)} ✓`, 'ok'));
-    else stations.push(stationEl(label, `${fmtTime(r.at)} ✕ ${escapeHtml(r.error || '')}`, 'err'));
+    else if (r.ok) stations.push(stationEl(label, escapeHtml(`${fmtTime(r.at)} ✓`), 'ok'));
+    else stations.push(stationEl(label, escapeHtml(`${fmtTime(r.at)} ✕ ${r.error || ''}`), 'err'));
   }
 
   for (const [type, f] of Object.entries(flows)) {
@@ -135,15 +134,10 @@ async function renderRuns() {
       info = '⚙ 正在运行…';
       state = 'busy';
     } else if (lr) {
-      info = `${fmtTime(lr.startedAt)} ${escapeHtml(OUTCOME_TEXT[lr.outcome] || lr.outcome)}（${lr.trigger === 'manual' ? '手动' : '定时'}${lr.count ? `，${lr.count} 篇` : ''}）`;
+      info = escapeHtml(`${fmtTime(lr.startedAt)} ${OUTCOME_TEXT[lr.outcome] || lr.outcome}${lr.count ? `（${lr.count} 篇）` : ''}`);
       state = (lr.outcome === 'success' || lr.outcome === 'empty') ? 'ok' : 'err';
     } else {
       info = '<span class="muted">未运行</span>';
-    }
-    if (st.lastScheduledStartAt && f.intervalSeconds) {
-      let next = new Date(st.lastScheduledStartAt).getTime() + f.intervalSeconds * 1000;
-      while (next < Date.now()) next += f.intervalSeconds * 1000;
-      info += `<span class="st-next">下次定时 ≈ ${fmtTime(new Date(next).toISOString())}</span>`;
     }
     if (type === 'weekly-report' && lr?.latestReport) {
       const reportName = lr.latestReport.split(/[\\/]/).pop();
@@ -343,7 +337,7 @@ $('rows').addEventListener('click', async (e) => {
         refresh();
       }, 2500);
     } else {
-      toast(`✕ 触发失败：${r?.error || '未知错误'}（flows.json 是否已注册？重新运行 scripts/setup.sh）`);
+      toast(`✕ 触发失败：${r?.error || '未知错误'}（flows.json 是否已注册？重新运行 scripts/setup.ps1）`);
     }
     refresh();
     return;
@@ -396,7 +390,7 @@ $('btn-bridge').addEventListener('click', async () => {
     if (r.hostErrors?.length) t += `；host 警告：${r.hostErrors.join('；')}`;
     toast(t);
   } else {
-    toast(`✕ 桥接失败：${r?.error || '未知错误'}（native host 是否已安装？运行 scripts/setup.sh）`);
+    toast(`✕ 桥接失败：${r?.error || '未知错误'}（native host 是否已安装？运行 scripts/setup.ps1）`);
   }
   refresh();
 });
@@ -517,8 +511,7 @@ $('f-archived').addEventListener('change', (e) => {
 
 $('s-folders-save').addEventListener('click', async () => {
   const folders = $('s-folders').value.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
-  const podcastFolders = $('s-podcast-folders').value.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
-  const r = await send({ cmd: 'setFolders', folders, podcastFolders });
+  const r = await send({ cmd: 'setFolders', folders });
   if (r?.ok) toast('✓ 已保存文件夹设置');
   refresh();
 });

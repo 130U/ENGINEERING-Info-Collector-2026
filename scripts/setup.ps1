@@ -149,10 +149,11 @@ foreach ($dir in @(
     New-Item -ItemType Directory -Path $dir -Force | Out-Null
 }
 
-Copy-Item -LiteralPath (Join-Path $Repo "flows\translate-claude-api.py") -Destination $FlowBin -Force
+Copy-Item -LiteralPath (Join-Path $Repo "flows\translate.py") -Destination $FlowBin -Force
 Copy-Item -LiteralPath (Join-Path $Repo "flows\generate-weekly-report.py") -Destination $WeeklyReportBin -Force
 Copy-Item -LiteralPath (Join-Path $Repo "flows\generate-reading-site.py") -Destination $ReadingSiteBin -Force
 Copy-Item -Path (Join-Path $Repo "reader\assets\*") -Destination $ReaderAssetsDir -Force
+Copy-Item -LiteralPath (Join-Path $Repo "reader\favicon.svg") -Destination (Join-Path $BinDir "favicon.svg") -Force
 Copy-Item -LiteralPath (Join-Path $Repo "host\info_collector_host.py") -Destination $HostBin -Force
 Copy-Item -LiteralPath (Join-Path $Repo "lib/info_collector_platform.py") -Destination $CompatBin -Force
 Copy-Item -LiteralPath (Join-Path $Repo "lib/credential_store.py") -Destination $CredentialBin -Force
@@ -194,9 +195,6 @@ if ($engine -ne "skip") {
     $defaultBaseUrl = if ($provider -eq "anthropic") { "https://api.anthropic.com" } else { "https://api.deepseek.com" }
 
     $apiKey = [string]$env:INFO_COLLECTOR_API_KEY
-    if (-not $apiKey -and $config.ContainsKey("apiKey")) {
-        $apiKey = [string]$config["apiKey"]
-    }
     if (-not $apiKey) {
         $apiKey = Read-Secret "   粘贴 API Key（输入不可见，直接回车可稍后配置）"
     }
@@ -255,11 +253,9 @@ if ($engine -ne "skip") {
     $apiKey = ""
 
     $flows["translate"] = [ordered]@{
-        command = @($PythonExe, $FlowBin, "--manual")
+        command = @($PythonExe, $FlowBin)
         scriptSha256 = (Get-FileHash -LiteralPath $FlowBin -Algorithm SHA256).Hash.ToLowerInvariant()
         lockFile = (Join-Path $Spool "state\translate.lock")
-        intervalSeconds = $null
-        label = "manual"
     }
     Write-Host "   已配置 $provider / $model"
 }
@@ -271,15 +267,11 @@ $flows["weekly-report"] = [ordered]@{
     command = @($PythonExe, $WeeklyReportBin)
     scriptSha256 = (Get-FileHash -LiteralPath $WeeklyReportBin -Algorithm SHA256).Hash.ToLowerInvariant()
     lockFile = (Join-Path $Spool "state\weekly-report.lock")
-    intervalSeconds = $null
-    label = "manual"
 }
 $flows["reading-site"] = [ordered]@{
     command = @($PythonExe, $ReadingSiteBin, "--open")
     scriptSha256 = (Get-FileHash -LiteralPath $ReadingSiteBin -Algorithm SHA256).Hash.ToLowerInvariant()
     lockFile = (Join-Path $Spool "state\reading-site.lock")
-    intervalSeconds = $null
-    label = "manual"
 }
 Write-Utf8NoBom -Path $FlowsPath -Content ($flows | ConvertTo-Json -Depth 10)
 

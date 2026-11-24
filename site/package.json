@@ -1,0 +1,9 @@
+{
+  "name": "info-collector-reading-desk",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/verify.mjs"
+  }
+}

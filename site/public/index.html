@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Info Collector 本地优先的技术情报收集、筛选与阅读终端">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f6f7f8">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="技术情报终端 · Info Collector">
+  <meta property="og:description" content="Info Collector 本地优先的技术情报收集、筛选与阅读终端">
+  <meta property="og:image" content="https://www.theodoreoy.com/ENGINEERING-Info-Collector-2026/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.theodoreoy.com/ENGINEERING-Info-Collector-2026/og.png">
+  <title>技术情报终端 · Info Collector</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="assets/style.css?v=163ab3f8e618">
+</head>
+<body class="library-page">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="index.html" aria-label="Info Collector 阅读库首页">
+        <span class="brand-signal" aria-hidden="true"></span>
+        <span><small>PERSONAL TECHNOLOGY INTELLIGENCE</small><strong>Info Collector<span class="brand-dot" aria-hidden="true">.</span></strong></span>
+      </a>
+      <div class="site-credits" aria-label="Built by @130U">
+        <span class="credit-label">Built by</span>
+        <span class="credit-people"><a href="https://github.com/130U" target="_blank" rel="noopener noreferrer">@130U</a></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="library-shell terminal-shell">
+    <section class="workspace-intro" aria-labelledby="workspace-title">
+      <div class="workspace-copy">
+        <p>本地优先，可信内容隔离</p>
+        <h1 id="workspace-title">阅读收件箱</h1>
+        <p>先判断价值，再进入全文。状态、主题和来源始终留在同一条扫描路径上。</p>
+      </div>
+      <label class="command-bar" for="article-search"><span>快速定位</span><span class="search-control"><input id="article-search" type="search" autocomplete="off" placeholder="搜索标题、摘要、作者或主题"><kbd>/</kbd></span><small>按 <kbd>/</kbd> 聚焦，Esc 清空</small></label>
+    </section>
+    <div class="terminal-layout">
+      <aside class="terminal-sidebar" aria-label="阅读库控制台">
+        <section class="sidebar-section" aria-labelledby="view-title"><div class="sidebar-heading"><h2 id="view-title">阅读状态</h2></div><div class="view-filters" id="view-filters" role="group" aria-label="整理视图">
+          <button class="view-filter is-active" type="button" data-view="pending" aria-pressed="true"><span>待整理</span><strong data-count-view="pending">7</strong></button>
+          <button class="view-filter" type="button" data-view="favorites" aria-pressed="false"><span>我的收藏</span><strong data-count-view="favorites">0</strong></button>
+          <button class="view-filter" type="button" data-view="all" aria-pressed="false"><span>可信译文</span><strong data-count-view="all">7</strong></button>
+        </div></section>
+        <section class="sidebar-section" aria-labelledby="filter-title"><div class="sidebar-heading"><h2 id="filter-title">主题筛选</h2></div><div class="tag-filters topic-list" id="tag-filters" role="group" aria-label="文章关键词筛选"><button class="tag-filter is-active" type="button" data-tag="全部" aria-pressed="true">全部</button><button class="tag-filter" type="button" data-tag="智能体" aria-pressed="false">智能体<span>6</span></button><button class="tag-filter" type="button" data-tag="世界模型" aria-pressed="false">世界模型<span>4</span></button><button class="tag-filter" type="button" data-tag="模型评估" aria-pressed="false">模型评估<span>4</span></button><button class="tag-filter" type="button" data-tag="产业动态" aria-pressed="false">产业动态<span>3</span></button><button class="tag-filter" type="button" data-tag="机器人" aria-pressed="false">机器人<span>3</span></button><button class="tag-filter" type="button" data-tag="产品" aria-pressed="false">产品<span>2</span></button><button class="tag-filter" type="button" data-tag="人工智能" aria-pressed="false">人工智能<span>2</span></button><button class="tag-filter" type="button" data-tag="具身智能" aria-pressed="false">具身智能<span>2</span></button><button class="tag-filter" type="button" data-tag="大模型" aria-pressed="false">大模型<span>2</span></button><button class="tag-filter" type="button" data-tag="学术研究" aria-pressed="false">学术研究<span>1</span></button></div></section>
+
+        <section class="weekly-activity" aria-labelledby="weekly-activity-title">
+          <div class="weekly-activity-head"><div class="weekly-activity-title"><h2 id="weekly-activity-title">阅读进度</h2><p id="weekly-breakdown">收藏 0，已整理 0</p></div><div class="weekly-activity-meta"><p><span id="weekly-range">本周</span></p><button class="weekly-export" id="export-weekly" type="button" disabled>导出 Markdown</button></div></div>
+          <div class="weekly-trend" role="img" aria-label="最近六周人工判断文章数量趋势"><svg viewBox="0 0 760 160" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="weekly-area-gradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9f3d32" stop-opacity=".2"></stop><stop offset="100%" stop-color="#9f3d32" stop-opacity="0"></stop></linearGradient></defs><path class="weekly-chart-grid" d="M 18 28 L 742 28 M 18 82 L 742 82 M 18 136 L 742 136"></path><path class="weekly-chart-area" id="weekly-chart-area" d=""></path><path class="weekly-chart-line" id="weekly-chart-line" d=""></path><line class="weekly-chart-marker-line" id="weekly-chart-marker-line" x1="0" y1="0" x2="0" y2="0"></line><circle class="weekly-chart-halo" id="weekly-chart-halo" cx="0" cy="0" r="10"></circle><circle class="weekly-chart-marker" id="weekly-chart-marker" cx="0" cy="0" r="4"></circle><text class="weekly-chart-value" id="weekly-chart-value" x="0" y="0" text-anchor="middle">0</text></svg><div class="weekly-periods" id="weekly-periods" aria-hidden="true"></div></div>
+        </section>
+      </aside>
+      <section class="terminal-workspace" aria-labelledby="collection-title">
+        <header class="workspace-heading"><div><h2 id="collection-title">可信译文</h2></div><div><span>按最新整理</span><output id="result-count" aria-live="polite" aria-atomic="true">显示 7 篇</output></div></header>
+        <section class="article-grid" id="article-grid">
+        <article class="article-card terminal-row" data-article-id="https://developer.nvidia.com/blog/pretrained-to-imagine-fine-tuned-to-act-the-rise-of-world-action-models/" data-tags="智能体|世界模型|机器人|大模型|模型评估" data-title="预训练以想象，微调以行动：世界-行动模型的崛起（Pretrained to Imagine, Fine-Tuned to Act: The Rise of World-Action Models）" data-summary="本文探讨了机器人基础模型领域的新范式——世界-行动模型（WAM）。与基于视觉-语言模型（VLM）的VLA模型不同，WAM利用预训练的视频或世界模型骨干网络，将语言指令映射为视觉变化，再生成动作。文章分析了WAM的三种核心范式（逆动力学、联合预测、仅表示）、动作集成方式及架构，并通过Veo 3.1实验和DreamZero等案例展示了其潜力。作者认为，WAM将成为与VLA并行的第二条主要技术路线，未来更可能走向混合模型。" data-authors="Moritz Reuss" data-source="https://developer.nvidia.com/blog/pretrained-to-imagine-fine-tuned-to-act-the-rise-of-world-action-models/" data-published-value="2026-06-15" data-collected-value="2026-07-12T06:26:37.358Z" data-processed-value="2026-07-12T07:01:59Z" data-content-status="">
+          <div class="card-index" aria-hidden="true">01</div>
+          <div class="card-main">
+            <div class="card-context"><a class="card-source-link" href="https://developer.nvidia.com/blog/pretrained-to-imagine-fine-tuned-to-act-the-rise-of-world-action-models/" target="_blank" rel="noopener noreferrer">developer.nvidia.com<span>原文</span></a><div class="keyword-row"><span class="keyword">智能体</span><span class="keyword">世界模型</span><span class="keyword">机器人</span></div></div>
+            <h2 title="预训练以想象，微调以行动：世界-行动模型的崛起（Pretrained to Imagine, Fine-Tuned to Act: The Rise of World-Action Models）"><a class="article-title-link" href="articles/article-906fad4eba21.html">预训练以想象，微调以行动：世界-行动模型的崛起（Pretrained to Imagine, Fine-Tuned to Act: The Rise of World-Action Models）</a></h2>
+            <p class="card-summary">本文探讨了机器人基础模型领域的新范式——世界-行动模型（WAM）。与基于视觉-语言模型（VLM）的VLA模型不同，WAM利用预训练的视频或世界模型骨干网络，将语言指令映射为视觉变化，再生成动作。文章分析了WAM的三种核心范式（逆动力学、联合预测、仅表示）、动作集成方式及架构，并通过Veo 3.1实验和DreamZero等案例展示了其潜力。作者认为，WAM将成为与VLA并行的第二条主要技术路线，未来更可能走向混合模型。</p>
+            <div class="card-meta" aria-label="文章时间、作者与主题">
+              <span class="published-label">发布于 2026-06-15</span>
+              <span class="activity-label">收录于 2026-07-12</span>
+              <span class="card-author">作者 Moritz Reuss</span>
+            </div>
+          </div>
+          <div class="card-actions" aria-label="文章操作">
+            <a class="read-action" href="articles/article-906fad4eba21.html">阅读译文</a>
+            <button class="card-action favorite-action" type="button" data-action="favorite" aria-pressed="false">收藏</button>
+            <button class="card-action review-action" type="button" data-action="review" aria-pressed="false">完成整理</button>
+            <button class="card-action copy-card-action" type="button" data-action="copy-card">复制资料卡</button>
+          </div>
+        </article>
+        <article class="article-card terminal-row" data-article-id="article-214d27b2a467" data-tags="智能体|模型评估|机器人|大模型|具身智能" data-title="RoboGaze：通过结构化视觉-语言分析评估机器人世界模型（RoboGaze: Evaluating Robot World Models via Structured Vision-Language Analysis）" data-summary="RoboGaze 是一个无需训练的多智能体 VLM 框架，用于结构化、可解释的机器人操作视频评估。它通过任务-场景接地、维度特定专家路由和基于批评者的验证三阶段流程，输出基于新提出的6维度30类型机器人特定故障分类法的、时间定位的故障报告。在包含382个剪辑的基准测试中，RoboGaze 在描述 F1 上比零样本基线提升高达43分，时间对齐提升37分，并将干净剪辑准确率从低于25%提升至超过80%，缩小了约85%的与人类评估的差距。" data-authors="Minh-Loi Nguyen, Nghiem Tuong Diep, Hung Khang Nguyen, Minh Le, Doanh Le Thien, Hoang H. Tran, Dung D. Le, Vu N. Duong, Daniel Sonntag, An Thai Le, Duy Minh Ho Nguyen, Vien Anh Ngo, Tran Van Nhiem" data-source="https://arxiv.org/html/2606.28385v1" data-published-value="2026-06-22" data-collected-value="" data-processed-value="2026-07-12T02:33" data-content-status="">
+          <div class="card-index" aria-hidden="true">02</div>
+          <div class="card-main">
+            <div class="card-context"><a class="card-source-link" href="https://arxiv.org/html/2606.28385v1" target="_blank" rel="noopener noreferrer">arxiv.org<span>原文</span></a><div class="keyword-row"><span class="keyword">智能体</span><span class="keyword">模型评估</span><span class="keyword">机器人</span></div></div>
+            <h2 title="RoboGaze：通过结构化视觉-语言分析评估机器人世界模型（RoboGaze: Evaluating Robot World Models via Structured Vision-Language Analysis）"><a class="article-title-link" href="articles/article-214d27b2a467.html">RoboGaze：通过结构化视觉-语言分析评估机器人世界模型（RoboGaze: Evaluating Robot World Models via Structured Vision-Language Analysis）</a></h2>
+            <p class="card-summary">RoboGaze 是一个无需训练的多智能体 VLM 框架，用于结构化、可解释的机器人操作视频评估。它通过任务-场景接地、维度特定专家路由和基于批评者的验证三阶段流程，输出基于新提出的6维度30类型机器人特定故障分类法的、时间定位的故障报告。在包含382个剪辑的基准测试中，RoboGaze 在描述 F1 上比零样本基线提升高达43分，时间对齐提升37分，并将干净剪辑准确率从低于25%提升至超过80%，缩小了约85%的与人类评估的差距。</p>
+            <div class="card-meta" aria-label="文章时间、作者与主题">
+              <span class="published-label">发布于 2026-06-22</span>
+              <span class="activity-label">整理于 2026-07-12</span>
+              <span class="card-author">作者 Minh-Loi Nguyen, Nghiem Tuong Diep, Hung Khang Nguyen, Minh Le, Doanh Le Thien, Hoang H. Tran, Dung D. Le, Vu N. Duong, Daniel Sonntag, An Thai Le, Duy Minh Ho Nguyen, Vien Anh Ngo, Tran Van Nhiem</span>
+            </div>
+          </div>
+          <div class="card-actions" aria-label="文章操作">
+            <a class="read-action" href="articles/article-214d27b2a467.html">阅读译文</a>
+            <button class="card-action favorite-action" type="button" data-action="favorite" aria-pressed="false">收藏</button>
+            <button class="card-action review-action" type="button" data-action="review" aria-pressed="false">完成整理</button>
+            <button class="card-action copy-card-action" type="button" data-action="copy-card">复制资料卡</button>
+          </div>
+        </article>
+        <article class="article-card terminal-row" data-article-id="article-289b12dac76c" data-tags="世界模型|人工智能|智能体|产业动态|融资" data-title="世界模型制造商 Odyssey 获亚马逊等巨头投资，估值达 14.5 亿美元（World model maker Odyssey nabs $1.45B valuation backed by Amazon and other big names）" data-summary="由自动驾驶先驱创立的世界模型AI初创公司Odyssey完成3.1亿美元B轮融资，估值达14.5亿美元，由Natural Capital领投，亚马逊、AMD Ventures、GV等参投。Odyssey通过人员背负摄像头采集物理世界数据，模拟类似谷歌地球的精确物理世界模型，应用于视频游戏和机器人等领域，并选择AWS作为首选云提供商，优化其模型以在Trainium芯片上运行。" data-authors="Julie Bort" data-source="https://techcrunch.com/2026/06/17/world-model-maker-odyssey-nabs-1-45b-valuation-backed-by-amazon-and-other-big-names/" data-published-value="2026-06-17" data-collected-value="" data-processed-value="2026-07-12T02:32" data-content-status="">
+          <div class="card-index" aria-hidden="true">03</div>
+          <div class="card-main">
+            <div class="card-context"><a class="card-source-link" href="https://techcrunch.com/2026/06/17/world-model-maker-odyssey-nabs-1-45b-valuation-backed-by-amazon-and-other-big-names/" target="_blank" rel="noopener noreferrer">techcrunch.com<span>原文</span></a><div class="keyword-row"><span class="keyword">世界模型</span><span class="keyword">人工智能</span><span class="keyword">智能体</span></div></div>
+            <h2 title="世界模型制造商 Odyssey 获亚马逊等巨头投资，估值达 14.5 亿美元（World model maker Odyssey nabs $1.45B valuation backed by Amazon and other big names）"><a class="article-title-link" href="articles/article-289b12dac76c.html">世界模型制造商 Odyssey 获亚马逊等巨头投资，估值达 14.5 亿美元（World model maker Odyssey nabs $1.45B valuation backed by Amazon and other big names）</a></h2>
+            <p class="card-summary">由自动驾驶先驱创立的世界模型AI初创公司Odyssey完成3.1亿美元B轮融资，估值达14.5亿美元，由Natural Capital领投，亚马逊、AMD Ventures、GV等参投。Odyssey通过人员背负摄像头采集物理世界数据，模拟类似谷歌地球的精确物理世界模型，应用于视频游戏和机器人等领域，并选择AWS作为首选云提供商，优化其模型以在Trainium芯片上运行。</p>
+            <div class="card-meta" aria-label="文章时间、作者与主题">
+              <span class="published-label">发布于 2026-06-17</span>
+              <span class="activity-label">整理于 2026-07-12</span>
+              <span class="card-author">作者 Julie Bort</span>
+            </div>
+          </div>
+          <div class="card-actions" aria-label="文章操作">
+            <a class="read-action" href="articles/article-289b12dac76c.html">阅读译文</a>
+            <button class="card-action favorite-action" type="button" data-action="favorite" aria-pressed="false">收藏</button>
+            <button class="card-action review-action" type="button" data-action="review" aria-pressed="false">完成整理</button>
+            <button class="card-action copy-card-action" type="button" data-action="copy-card">复制资料卡</button>
+          </div>
+        </article>
+        <article class="article-card terminal-row" data-article-id="article-51c2ee532f35" data-tags="世界模型|人工智能|机器人|具身智能|产业动态" data-title="世界杯已至，世界模型会是下一个吗？（The World Cup Is Now, Are World Models Next?）" data-summary="世界模型正成为AI资本最密集的前沿领域，Dyna Robotics、FieldAI、Odyssey和World Labs等厂商已累计融资约20亿美元。与LLM不同，世界模型学习环境随时间变化，适用于机器人、自动驾驶和工业运营。技术仍处早期，但已在合成环境生成、非结构化工业自主操作和通用具身智能三个层面积累动力。企业需区分商业现实与市场炒作，在工厂等边界明确环境，数字孪生加物理模拟器通常已足够；世界模型在建筑工地、矿山等动态变化环境中最具价值。" data-authors="Aleksander Milligan" data-source="https://www.verdantix.com/insights/blog/the-world-cup-is-now--are-world-models-next" data-published-value="2026-06-23" data-collected-value="" data-processed-value="2026-07-12T02:32" data-content-status="">
+          <div class="card-index" aria-hidden="true">04</div>
+          <div class="card-main">
+            <div class="card-context"><a class="card-source-link" href="https://www.verdantix.com/insights/blog/the-world-cup-is-now--are-world-models-next" target="_blank" rel="noopener noreferrer">verdantix.com<span>原文</span></a><div class="keyword-row"><span class="keyword">世界模型</span><span class="keyword">人工智能</span><span class="keyword">机器人</span></div></div>
+            <h2 title="世界杯已至，世界模型会是下一个吗？（The World Cup Is Now, Are World Models Next?）"><a class="article-title-link" href="articles/article-51c2ee532f35.html">世界杯已至，世界模型会是下一个吗？（The World Cup Is Now, Are World Models Next?）</a></h2>
+            <p class="card-summary">世界模型正成为AI资本最密集的前沿领域，Dyna Robotics、FieldAI、Odyssey和World Labs等厂商已累计融资约20亿美元。与LLM不同，世界模型学习环境随时间变化，适用于机器人、自动驾驶和工业运营。技术仍处早期，但已在合成环境生成、非结构化工业自主操作和通用具身智能三个层面积累动力。企业需区分商业现实与市场炒作，在工厂等边界明确环境，数字孪生加物理模拟器通常已足够；世界模型在建筑工地、矿山等动态变化环境中最具价值。</p>
+            <div class="card-meta" aria-label="文章时间、作者与主题">
+              <span class="published-label">发布于 2026-06-23</span>
+              <span class="activity-label">整理于 2026-07-12</span>
+              <span class="card-author">作者 Aleksander Milligan</span>
+            </div>
+          </div>
+          <div class="card-actions" aria-label="文章操作">
+            <a class="read-action" href="articles/article-51c2ee532f35.html">阅读译文</a>
+            <button class="card-action favorite-action" type="button" data-action="favorite" aria-pressed="false">收藏</button>
+            <button class="card-action review-action" type="button" data-action="review" aria-pressed="false">完成整理</button>
+            <button class="card-action copy-card-action" type="button" data-action="copy-card">复制资料卡</button>
+          </div>
+        </article>
+        <article class="article-card terminal-row" data-article-id="article-560980794f80" data-tags="智能体|世界模型|训练|数据|产业动态" data-title="General Intuition 的 23 亿美元赌注：用电子游戏训练现实世界的 AI 智能体" data-summary="AI 初创公司 General Intuition 获得 3.2 亿美元融资，估值 23 亿美元。该公司利用其兄弟公司 Medal 的数亿小时游戏录像及按键动作标签数据，训练具备时空推理能力的通用智能体模型。该模型可同时驱动游戏角色和实体四足机器人，并仅需少量真实世界数据即可微调。公司计划将模型 API 商业化，并承诺不用于致命自主武器系统。" data-authors="Rebecca Bellan" data-source="https://techcrunch.com/2026/06/25/general-intuitions-2-3b-bet-that-video-games-can-train-ai-agents-for-the-real-world/" data-published-value="2026-06-25" data-collected-value="" data-processed-value="2026-07-12T02:31" data-content-status="">
+          <div class="card-index" aria-hidden="true">05</div>
+          <div class="card-main">
+            <div class="card-context"><a class="card-source-link" href="https://techcrunch.com/2026/06/25/general-intuitions-2-3b-bet-that-video-games-can-train-ai-agents-for-the-real-world/" target="_blank" rel="noopener noreferrer">techcrunch.com<span>原文</span></a><div class="keyword-row"><span class="keyword">智能体</span><span class="keyword">世界模型</span><span class="keyword">训练</span></div></div>
+            <h2 title="General Intuition 的 23 亿美元赌注：用电子游戏训练现实世界的 AI 智能体"><a class="article-title-link" href="articles/article-560980794f80.html">General Intuition 的 23 亿美元赌注：用电子游戏训练现实世界的 AI 智能体</a></h2>
+            <p class="card-summary">AI 初创公司 General Intuition 获得 3.2 亿美元融资，估值 23 亿美元。该公司利用其兄弟公司 Medal 的数亿小时游戏录像及按键动作标签数据，训练具备时空推理能力的通用智能体模型。该模型可同时驱动游戏角色和实体四足机器人，并仅需少量真实世界数据即可微调。公司计划将模型 API 商业化，并承诺不用于致命自主武器系统。</p>
+            <div class="card-meta" aria-label="文章时间、作者与主题">
+              <span class="published-label">发布于 2026-06-25</span>
+              <span class="activity-label">整理于 2026-07-12</span>
+              <span class="card-author">作者 Rebecca Bellan</span>
+            </div>
+          </div>
+          <div class="card-actions" aria-label="文章操作">
+            <a class="read-action" href="articles/article-560980794f80.html">阅读译文</a>
+            <button class="card-action favorite-action" type="button" data-action="favorite" aria-pressed="false">收藏</button>
+            <button class="card-action review-action" type="button" data-action="review" aria-pressed="false">完成整理</button>
+            <button class="card-action copy-card-action" type="button" data-action="copy-card">复制资料卡</button>
+          </div>
+        </article>
+        <article class="article-card terminal-row" data-article-id="article-a19b2fd84ab7" data-tags="智能体|模型评估|产品|学术研究" data-title="理解是新的瓶颈（Understanding is the new bottleneck）" data-summary="随着AI智能体编写越来越多代码，人类理解代码的能力成为新瓶颈。作者认为理解不是为了验证，而是为了参与创造过程。他提出三种高效理解代码的技术：代码解释文档（含背景知识、直觉引导、交互式图表和测验）、微型世界（通过交互式调试器和游戏化迁移工具直观理解系统）、共享空间（团队在协作平台中共同建立心智模型）。核心主张是AI应增强人类理解而非完全自动化。" data-authors="Geoffrey Litt" data-source="https://www.geoffreylitt.com/2026/07/02/understanding-is-the-new-bottleneck.html" data-published-value="2026-07-02" data-collected-value="" data-processed-value="2026-07-11T13:32" data-content-status="">
+          <div class="card-index" aria-hidden="true">06</div>
+          <div class="card-main">
+            <div class="card-context"><a class="card-source-link" href="https://www.geoffreylitt.com/2026/07/02/understanding-is-the-new-bottleneck.html" target="_blank" rel="noopener noreferrer">geoffreylitt.com<span>原文</span></a><div class="keyword-row"><span class="keyword">智能体</span><span class="keyword">模型评估</span><span class="keyword">产品</span></div></div>
+            <h2 title="理解是新的瓶颈（Understanding is the new bottleneck）"><a class="article-title-link" href="articles/article-a19b2fd84ab7.html">理解是新的瓶颈（Understanding is the new bottleneck）</a></h2>
+            <p class="card-summary">随着AI智能体编写越来越多代码，人类理解代码的能力成为新瓶颈。作者认为理解不是为了验证，而是为了参与创造过程。他提出三种高效理解代码的技术：代码解释文档（含背景知识、直觉引导、交互式图表和测验）、微型世界（通过交互式调试器和游戏化迁移工具直观理解系统）、共享空间（团队在协作平台中共同建立心智模型）。核心主张是AI应增强人类理解而非完全自动化。</p>
+            <div class="card-meta" aria-label="文章时间、作者与主题">
+              <span class="published-label">发布于 2026-07-02</span>
+              <span class="activity-label">整理于 2026-07-11</span>
+              <span class="card-author">作者 Geoffrey Litt</span>
+            </div>
+          </div>
+          <div class="card-actions" aria-label="文章操作">
+            <a class="read-action" href="articles/article-a19b2fd84ab7.html">阅读译文</a>
+            <button class="card-action favorite-action" type="button" data-action="favorite" aria-pressed="false">收藏</button>
+            <button class="card-action review-action" type="button" data-action="review" aria-pressed="false">完成整理</button>
+            <button class="card-action copy-card-action" type="button" data-action="copy-card">复制资料卡</button>
+          </div>
+        </article>
+        <article class="article-card terminal-row" data-article-id="article-6127def8cb5f" data-tags="智能体|模型评估|产品|推理" data-title="Know your unknowns — 示例" data-summary="本文介绍了11个自包含的HTML文件，用于在实施前、实施中和实施后发现未知问题。这些文件展示了如何通过盲点扫描、交互式解释器、设计方向探索、原型模拟、头脑风暴、访谈、参考移植、可调整计划、实施笔记、提案文档和合并前测验等方法，低成本地发现并应对项目中的未知因素。" data-authors="" data-source="https://thariqs.github.io/html-effectiveness/unknowns/" data-published-value="" data-collected-value="" data-processed-value="2026-07-11T12:54" data-content-status="">
+          <div class="card-index" aria-hidden="true">07</div>
+          <div class="card-main">
+            <div class="card-context"><a class="card-source-link" href="https://thariqs.github.io/html-effectiveness/unknowns/" target="_blank" rel="noopener noreferrer">thariqs.github.io<span>原文</span></a><div class="keyword-row"><span class="keyword">智能体</span><span class="keyword">模型评估</span><span class="keyword">产品</span></div></div>
+            <h2 title="Know your unknowns — 示例"><a class="article-title-link" href="articles/article-6127def8cb5f.html">Know your unknowns — 示例</a></h2>
+            <p class="card-summary">本文介绍了11个自包含的HTML文件，用于在实施前、实施中和实施后发现未知问题。这些文件展示了如何通过盲点扫描、交互式解释器、设计方向探索、原型模拟、头脑风暴、访谈、参考移植、可调整计划、实施笔记、提案文档和合并前测验等方法，低成本地发现并应对项目中的未知因素。</p>
+            <div class="card-meta" aria-label="文章时间、作者与主题">
+              <span class="published-label">发布时间未知</span>
+              <span class="activity-label">整理于 2026-07-11</span>
+            </div>
+          </div>
+          <div class="card-actions" aria-label="文章操作">
+            <a class="read-action" href="articles/article-6127def8cb5f.html">阅读译文</a>
+            <button class="card-action favorite-action" type="button" data-action="favorite" aria-pressed="false">收藏</button>
+            <button class="card-action review-action" type="button" data-action="review" aria-pressed="false">完成整理</button>
+            <button class="card-action copy-card-action" type="button" data-action="copy-card">复制资料卡</button>
+          </div>
+        </article></section>
+        <section class="empty-state" id="empty-state" hidden><h2 id="empty-title">没有符合条件的文章</h2><p>可以清除当前状态、主题和搜索条件。</p><button id="reset-filters" type="button">清除筛选</button></section>
+      </section>
+    </div>
+    <div class="reader-feedback" id="reader-feedback" role="status" aria-live="polite" aria-atomic="true"></div>
+  </main>
+  <footer class="site-footer" aria-label="Built by @130U on Shi Wang's Info Collector"><span>Built by</span> <a href="https://github.com/130U" target="_blank" rel="noopener noreferrer">@130U</a> <i>on</i> <a href="https://github.com/aswrise/info-collector" target="_blank" rel="noopener noreferrer">Shi Wang's Info Collector</a></footer>
+  <script src="assets/app.js?v=163ab3f8e618" defer></script>
+</body>
+</html>

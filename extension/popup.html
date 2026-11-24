@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Info Collector</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-shell">
+    <header class="brand">
+      <span class="brand-mark" aria-hidden="true">IC</span>
+      <div>
+        <p>LOCAL INTELLIGENCE</p>
+        <h1>Info Collector</h1>
+      </div>
+      <span class="online" title="扩展已运行" aria-label="扩展已运行"></span>
+    </header>
+
+    <main>
+      <section class="current-page">
+        <span class="section-label">CURRENT PAGE</span>
+        <p id="title">正在读取当前页面…</p>
+      </section>
+      <div id="status" role="status" aria-live="polite">正在连接本地队列…</div>
+      <div class="actions">
+        <button id="save" class="primary" hidden><span aria-hidden="true">＋</span> 加入文章队列</button>
+      </div>
+      <a href="#" id="dashboard"><span>打开情报工作台</span><strong aria-hidden="true">↗</strong></a>
+    </main>
+
+    <footer><i></i> Windows Native Host · Local-first</footer>
+  </div>
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
